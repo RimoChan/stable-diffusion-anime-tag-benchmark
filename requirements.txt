@@ -1,0 +1,6 @@
+hbutils>=0.9.1
+huggingface-hub>=0.15.1
+requests>=2.28.1
+tqdm>=4.64.1
+Pillow>=9.4.0
+pandas>=2.0.2
