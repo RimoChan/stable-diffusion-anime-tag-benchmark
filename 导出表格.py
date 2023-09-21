@@ -1,83 +1,124 @@
 import json
+import numpy as np
 
 import pandas as pd
 
 
 output = open('1.md', 'w', encoding='utf8')
 
-l = json.load(open('记录.json', encoding='utf-8'))
-m = {}
-all_model = set()
-all_tag = set()
-for d in l:
-    model = d['参数']['override_settings']['sd_model_checkpoint']
-    好 = len([i for i in d['分数'] if i > 0.1])
-    n = len(d['分数'])
-    assert (model, d['标签']) not in m
-    m[model, d['标签']] = 好, n
-    all_model.add(model)
-    all_tag.add(d['标签'])
-all_model = sorted(all_model)
-all_tag = sorted(all_tag)
 
+def 加粗(data, xx, yy):
+    for i, _ in enumerate(yy):
+        top = sorted([data[x][i] for x in xx], reverse=True, key=lambda x: x if isinstance(x, float|int) else -1)[:1]
+        for x in xx:
+            if data[x][i] in top and data[x][i] != '-':
+                data[x][i] = f'**{data[x][i]}**'
 
-好标签 = []     # 至少1个不为0且不为None
-满标签 = []     # 至少1个不为0，全部不为None
-for (model, tag), (好, n) in m.items():
-    if 好 > 1:
-        好标签.append(tag)
-好标签 = sorted({*好标签})
-for tag in 好标签:
-    for model in all_model:
-        if m.get((model, tag)) is None:
-            break
-    else:
-        满标签.append(tag)
+def f1():
+    l = json.load(open('记录.json', encoding='utf-8'))
+    m = {}
+    all_model = set()
+    all_tag = set()
+    for d in l:
+        model = d['参数']['override_settings']['sd_model_checkpoint']
+        好 = len([i for i in d['分数'] if i > 0.1])
+        n = len(d['分数'])
+        assert (model, d['标签']) not in m
+        m[model, d['标签']] = 好, n
+        all_model.add(model)
+        all_tag.add(d['标签'])
+    all_model = sorted(all_model, key=lambda x: x if 'XL' in x else '0' + x)
+    all_tag = sorted(all_tag)
 
-data = {}
-for model in all_model:
-    data[model] = []
+    好标签 = []     # 至少1个不为0且不为None
+    满标签 = []     # 至少1个不为0，全部不为None
+    for (model, tag), (好, n) in m.items():
+        if 好 > 1:
+            好标签.append(tag)
+    好标签 = sorted({*好标签})
     for tag in 好标签:
-        t = m.get((model, tag))
-        if t is None:
-            data[model].append('-')
+        for model in all_model:
+            if m.get((model, tag)) is None:
+                break
         else:
-            好, n = t
-            data[model].append(好 / n)
-df = pd.DataFrame(data, index=好标签)
-output.write(df.to_markdown() + '\n\n')
+            满标签.append(tag)
 
-
-目录 = json.load(open('data/目录.json', encoding='utf-8'))
-逆转目录 = {}
-mm = {}
-for k, v in 目录.items():
-    for i in v['keys']:
-        逆转目录[i.lower().replace(' ', '_')] = k
-for (model, tag), (好, n) in m.items():
-    if tag not in 满标签:
-        continue
-    大 = 逆转目录[tag]
-    原好, 原n = mm.get((model, 大), (0, 0))
-    mm[model, 大] = 好 + 原好, n + 原n
-data = {}
-sorted_目录 = sorted(目录)
-for model in all_model:
-    data[model] = []
-    for 大 in sorted_目录:
-        t = mm.get((model, 大))
-        if t is None:
-            data[model].append('-')
-        else:
-            好, n = t
-            if n <= 16:     # 不置信
+    data = {}
+    for model in all_model:
+        data[model] = []
+        for tag in 好标签:
+            t = m.get((model, tag))
+            if t is None:
                 data[model].append('-')
             else:
-                data[model].append(round(好 / n, 3))
-for i, tag in enumerate(sorted_目录):
-    top = sorted([data[model][i] for model in all_model], reverse=True)[:1]
+                好, n = t
+                data[model].append(好 / n)
+    df = pd.DataFrame(data, index=好标签)
+    output.write(df.to_markdown() + '\n\n')
+
+    目录 = json.load(open('data/目录.json', encoding='utf-8'))
+    逆转目录 = {}
+    mm = {}
+    for k, v in 目录.items():
+        for i in v['keys']:
+            逆转目录[i.lower().replace(' ', '_')] = k
+    for (model, tag), (好, n) in m.items():
+        if tag not in 满标签:
+            continue
+        大 = 逆转目录[tag]
+        原好, 原n = mm.get((model, 大), (0, 0))
+        mm[model, 大] = 好 + 原好, n + 原n
+    data = {}
+    sorted_目录 = sorted(目录)
     for model in all_model:
-        if data[model][i] in top and data[model][i] != '-':
-            data[model][i] = f'**{data[model][i]}**'
-df = pd.DataFrame(data, index=[目录[i]['name'] for i in sorted_目录])
-output.write(df.to_markdown())
+        data[model] = []
+        for 大 in sorted_目录:
+            t = mm.get((model, 大))
+            if t is None:
+                data[model].append('-')
+            else:
+                好, n = t
+                if n <= 32:     # 不置信
+                    data[model].append('-')
+                else:
+                    data[model].append(round(好 / n, 3))
+    加粗(data, all_model, sorted_目录)
+    df = pd.DataFrame(data, index=[目录[i]['name'] for i in sorted_目录])
+    output.write(df.to_markdown() + '\n\n')
+
+def f2():
+    l = json.load(open('记录_多标签.json', encoding='utf-8'))
+    m = {}
+    for d in l:
+        n = len(d['标签组'])
+        model = d['参数']['override_settings']['sd_model_checkpoint']
+        m.setdefault((model, n), {'相似度': [], '分数': []})
+        m[model, n]['相似度'].extend(d['相似度'])
+        m[model, n]['分数'].extend(d['分数'])
+    all_model, all_n = zip(*m.keys())
+    all_model = sorted({*all_model}, key=lambda x: x if 'XL' in x else '0' + x)
+    all_n = sorted({*all_n})
+
+    data = {}
+    data2 = {}
+    for model in all_model:
+        data[model] = []
+        data2[model] = []
+        for n in all_n:
+            t = m.get((model, n))
+            if t is None:
+                data[model].append('-')
+                data2[model].append('-')
+            else:
+                a = np.array(m[model, n]['分数'])
+                acc = (a > 0.001).sum() / len(a.flatten())
+                data[model].append(round(acc, 3))
+                data2[model].append(round(1 - np.array(m[model, n]['相似度']).mean(), 3))
+    加粗(data, all_model, all_n)
+    output.write(pd.DataFrame(data, index=all_n).to_markdown() + '\n\n')
+    加粗(data2, all_model, all_n)
+    output.write(pd.DataFrame(data2, index=all_n).to_markdown() + '\n\n')
+
+
+f1()
+f2()
