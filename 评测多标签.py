@@ -47,7 +47,7 @@ else:
     记录 = []
 
 
-for (model, VAE), m, i in tqdm([*itertools.product(要测的模型, (2, 4, 8, 16, 32, 64, 128), range(15))]):
+for (model, VAE), m, i in tqdm([*itertools.product(要测的模型, (2, 4, 8, 16, 32, 64, 128), range(25))]):
     if i == 0:
         random.seed(0)
 
