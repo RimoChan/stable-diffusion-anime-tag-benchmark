@@ -65,9 +65,9 @@
 
 </sub>
 
-> 表格长度不够，缩写了1下。A指anything，Bp指blue_pencil，CF指Counterfeit，CM指cosplaymix。
+> 表格长度不够，缩写了1下。A指anything，Bp指blue_pencil，CF指Counterfeit，CM指cosplaymix，SF指sweetfruit_melon，CYM指cuteyukimixAdorable_midchapter。
 > 
-> 加粗表示它是当前标签的top1。
+> 加粗表示它是当前标签的top3。
 
 可以看出: 
 
