@@ -1,4 +1,5 @@
 import json
+import copy
 import numpy as np
 
 import pandas as pd
@@ -7,20 +8,40 @@ import pandas as pd
 output = open('1.md', 'w', encoding='utf8')
 
 
-def 加粗(data, xx, yy):
+def 模型改名(x):    # 为了让表格在 GitHub 上显示更好看
+    return {
+        'AnythingV5Ink_ink': 'A5Ink',
+        'anything-v4.5-pruned-fp32': 'A4.5',
+        'Counterfeit-V2.2': 'CF2.2',
+        'Counterfeit-V3.0_fp16': 'CF3.0',
+        'cosplaymix_v20': 'CM20',
+        'novelailatest-pruned': 'novelai',
+        'sweetfruit_melon.safetensors_v1.0': 'SF1.0',
+        'bluePencil_v10': 'BP10',
+        'blue_pencil-XL-v0.3.1': 'BPXL0.3.1',
+        'CounterfeitXL-V1.0': 'CFXL1.0',
+        'cuteyukimixAdorable_midchapter3': 'CYM3',
+    }.get(x, x)
+
+
+def 加粗(data: dict[str, list], yy):
+    data = copy.deepcopy(data)
+    xx = [*data.keys()]
     for i, _ in enumerate(yy):
-        top = sorted([data[x][i] for x in xx], reverse=True, key=lambda x: x if isinstance(x, float|int) else -1)[:1]
+        top = sorted([data[x][i] for x in xx], reverse=True, key=lambda x: x if isinstance(x, float|int) else -1)[:3]
         for x in xx:
             if data[x][i] in top and data[x][i] != '-':
                 data[x][i] = f'**{data[x][i]}**'
+    return data
+
 
 def f1():
-    l = json.load(open('记录.json', encoding='utf-8'))
+    l = json.load(open('savedata/记录.json', encoding='utf-8'))
     m = {}
     all_model = set()
     all_tag = set()
     for d in l:
-        model = d['参数']['override_settings']['sd_model_checkpoint']
+        model = 模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
         好 = len([i for i in d['分数'] if i > 0.1])
         n = len(d['分数'])
         assert (model, d['标签']) not in m
@@ -82,16 +103,16 @@ def f1():
                     data[model].append('-')
                 else:
                     data[model].append(round(好 / n, 3))
-    加粗(data, all_model, sorted_目录)
-    df = pd.DataFrame(data, index=[目录[i]['name'] for i in sorted_目录])
+    df = pd.DataFrame(加粗(data, sorted_目录), index=[目录[i]['name'] for i in sorted_目录])
     output.write(df.to_markdown() + '\n\n')
 
+
 def f2():
-    l = json.load(open('记录_多标签.json', encoding='utf-8'))
+    l = json.load(open('savedata/记录_多标签.json', encoding='utf-8'))
     m = {}
     for d in l:
         n = len(d['标签组'])
-        model = d['参数']['override_settings']['sd_model_checkpoint']
+        model = 模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
         m.setdefault((model, n), {'相似度': [], '分数': []})
         m[model, n]['相似度'].extend(d['相似度'])
         m[model, n]['分数'].extend(d['分数'])
@@ -114,10 +135,8 @@ def f2():
                 acc = (a > 0.001).sum() / len(a.flatten())
                 data[model].append(round(acc, 3))
                 data2[model].append(round(1 - np.array(m[model, n]['相似度']).mean(), 3))
-    加粗(data, all_model, all_n)
-    output.write(pd.DataFrame(data, index=all_n).to_markdown() + '\n\n')
-    加粗(data2, all_model, all_n)
-    output.write(pd.DataFrame(data2, index=all_n).to_markdown() + '\n\n')
+    output.write(pd.DataFrame(加粗(data, all_n), index=all_n).to_markdown() + '\n\n')
+    output.write(pd.DataFrame(加粗(data2, all_n), index=all_n).to_markdown() + '\n\n')
 
 
 f1()
