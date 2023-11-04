@@ -38,8 +38,8 @@ cfg_scale = 7
 check_model(要测的模型)
 
 
-if Path('记录.json').exists():
-    with open('记录.json', 'r', encoding='utf8') as f:
+if Path('savedata/记录.json').exists():
+    with open('savedata/记录.json', 'r', encoding='utf8') as f:
         记录 = json.load(f)
 else:
     记录 = []
@@ -85,5 +85,5 @@ for (model, VAE), 标签 in tqdm(itertools.product(要测的模型, 要测的标
         '参数': 参数,
     }
     记录.append(录)
-    with open('记录.json', 'w', encoding='utf8') as f:
+    with open('savedata/记录.json', 'w', encoding='utf8') as f:
         f.write(json.dumps(记录, ensure_ascii=False, indent=4))

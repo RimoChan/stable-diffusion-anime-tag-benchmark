@@ -22,6 +22,9 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('blue_pencil-XL-v0.3.1', None),
     ('bluePencil_v10', 'clearvae_v23.safetensors'),
     ('Counterfeit-V3.0_fp16', 'kl-f8-anime2.ckpt'),
+    ('AnythingV5Ink_ink', None),
+    ('sweetfruit_melon.safetensors_v1.0', 'vae-ft-mse-840000-ema-pruned.ckpt'),
+    ('cuteyukimixAdorable_midchapter3', 'anything-v4.0.vae.pt'),
 ]
 
 
@@ -40,8 +43,8 @@ cfg_scale = 7
 check_model(要测的模型)
 
 
-if Path('记录_多标签.json').exists():
-    with open('记录_多标签.json', 'r', encoding='utf8') as f:
+if Path('savedata/记录_多标签.json').exists():
+    with open('savedata/记录_多标签.json', 'r', encoding='utf8') as f:
         记录 = json.load(f)
 else:
     记录 = []
@@ -100,5 +103,5 @@ for (model, VAE), m, i in tqdm([*itertools.product(要测的模型, (2, 4, 8, 16
         '参数': 参数,
     }
     记录.append(录)
-    with open('记录_多标签.json', 'w', encoding='utf8') as f:
+    with open('savedata/记录_多标签.json', 'w', encoding='utf8') as f:
         f.write(json.dumps(记录, ensure_ascii=False, indent=2))
