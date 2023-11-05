@@ -125,7 +125,7 @@
 
 以及顺便画了一张图，表示当tag数量为32时，各个模型的准确度和多样性，是这样——
 
-![./bokeh_plot.png](./bokeh_plot.png)
+<img src='./bokeh_plot.webp' width='480px'>
 
 ## 使用方法
 
