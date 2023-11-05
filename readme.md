@@ -123,6 +123,10 @@
 
 最多样的是novelai，这个模型确实多样化程度很高，其他的像Counterfeit-2.2、cuteyukimix也不错。不过这几个模型的准确度不是很高，看来多样性和准确性似乎是逆相关的。
 
+以及顺便画了一张图，表示当tag数量为32时，各个模型的准确度和多样性，是这样——
+
+![./bokeh_plot.png](./bokeh_plot.png)
+
 ## 使用方法
 
 - 首先你要有1个[stable-diffusion-webui](https://github.com/AUTOMATIC1111/stable-diffusion-webui)。运行`webui-user.bat`，启动参数需要加上`--api`。
