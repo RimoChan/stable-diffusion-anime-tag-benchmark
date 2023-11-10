@@ -17,6 +17,7 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('AOM3A2', 'orangemix.vae.pt'),
     ('cosplaymix_v20', None),
     ('Counterfeit-V2.2', 'Counterfeit-V2.5.vae.pt'),
+    ('Counterfeit-V2.5_pruned', 'Counterfeit-V2.5.vae.pt'),
     ('novelailatest-pruned', 'novelailatest-pruned.vae.pt'),
     ('CounterfeitXL-V1.0', None),
     ('blue_pencil-XL-v0.3.1', None),
@@ -25,6 +26,10 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('AnythingV5Ink_ink', None),
     ('sweetfruit_melon.safetensors_v1.0', 'vae-ft-mse-840000-ema-pruned.ckpt'),
     ('cuteyukimixAdorable_midchapter3', 'anything-v4.0.vae.pt'),
+    ('perfectWorld_v2Baked', None),
+    ('perfectWorld_v6Baked', None),
+    ('meinamix_meinaV11', None),
+    ('cetusMix_Whalefall2', 'kl-f8-anime2.ckpt'),
 ]
 
 

@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 
 
-output = open('1.md', 'w', encoding='utf8')
+output = open('好.md', 'w', encoding='utf8')
 
 
-def 模型改名(x):    # 为了让表格在 GitHub 上显示更好看
+def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
     return {
         'AnythingV5Ink_ink': 'A5Ink',
         'anything-v4.5-pruned-fp32': 'A4.5',
@@ -21,10 +21,15 @@ def 模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'blue_pencil-XL-v0.3.1': 'BPXL0.3.1',
         'CounterfeitXL-V1.0': 'CFXL1.0',
         'cuteyukimixAdorable_midchapter3': 'CYM3',
+        'Counterfeit-V2.5_pruned': 'CF2.5',
+        'perfectWorld_v2Baked': 'PW2',
+        'perfectWorld_v6Baked': 'PW6',
+        'meinamix_meinaV11': 'MM11',
+        'cetusMix_Whalefall2': 'CMWF2',
     }.get(x, x)
 
 
-def 加粗(data: dict[str, list], yy):
+def _加粗(data: dict[str, list], yy):
     data = copy.deepcopy(data)
     xx = [*data.keys()]
     for i, _ in enumerate(yy):
@@ -35,13 +40,13 @@ def 加粗(data: dict[str, list], yy):
     return data
 
 
-def f1():
+def 导出单标签():
     l = json.load(open('savedata/记录.json', encoding='utf-8'))
     m = {}
     all_model = set()
     all_tag = set()
     for d in l:
-        model = 模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
+        model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
         好 = len([i for i in d['分数'] if i > 0.1])
         n = len(d['分数'])
         assert (model, d['标签']) not in m
@@ -75,7 +80,7 @@ def f1():
                 好, n = t
                 data[model].append(好 / n)
     df = pd.DataFrame(data, index=好标签)
-    output.write(df.to_markdown() + '\n\n')
+    output.write('# 模型对单标签-准确率: \n' + df.to_markdown() + '\n\n')
 
     目录 = json.load(open('data/目录.json', encoding='utf-8'))
     逆转目录 = {}
@@ -103,16 +108,16 @@ def f1():
                     data[model].append('-')
                 else:
                     data[model].append(round(好 / n, 3))
-    df = pd.DataFrame(加粗(data, sorted_目录), index=[目录[i]['name'] for i in sorted_目录])
-    output.write(df.to_markdown() + '\n\n')
+    df = pd.DataFrame(_加粗(data, sorted_目录), index=[目录[i]['name'] for i in sorted_目录])
+    output.write('# 模型对标签类别-准确率: \n' + df.to_markdown() + '\n\n')
 
 
-def f2():
+def 导出多标签():
     l = json.load(open('savedata/记录_多标签.json', encoding='utf-8'))
     m = {}
     for d in l:
         n = len(d['标签组'])
-        model = 模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
+        model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
         m.setdefault((model, n), {'相似度': [], '分数': []})
         m[model, n]['相似度'].extend(d['相似度'])
         m[model, n]['分数'].extend(d['分数'])
@@ -135,9 +140,9 @@ def f2():
                 acc = (a > 0.001).sum() / len(a.flatten())
                 data[model].append(round(acc, 3))
                 data2[model].append(round(1 - np.array(m[model, n]['相似度']).mean(), 3))
-    output.write(pd.DataFrame(加粗(data, all_n), index=all_n).to_markdown() + '\n\n')
-    output.write(pd.DataFrame(加粗(data2, all_n), index=all_n).to_markdown() + '\n\n')
+    output.write('# 模型对标签个数-准确率: \n' + pd.DataFrame(_加粗(data, all_n), index=all_n).to_markdown() + '\n\n')
+    output.write('# 模型对标签个数-多样性: \n' + pd.DataFrame(_加粗(data2, all_n), index=all_n).to_markdown() + '\n\n')
 
 
-f1()
-f2()
+导出单标签()
+导出多标签()
