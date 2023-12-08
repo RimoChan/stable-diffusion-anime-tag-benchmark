@@ -12,10 +12,13 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
 
 
 要测的模型 = [
+    ('anythingV3_fp16', 'anything-v4.0.vae.pt'),
     ('anything-v4.5-pruned-fp32', 'anything-v4.0.vae.pt'),
     ('AOM3A1', 'orangemix.vae.pt'),
     ('AOM3A2', 'orangemix.vae.pt'),
+    ('aoaokoPVCStyleModel_pvcAOAOKO', 'novelailatest-pruned.vae.pt'),
     ('cosplaymix_v20', None),
+    ('counterfeitV30_20', 'Counterfeit-V2.5.vae.pt'),
     ('Counterfeit-V2.2', 'Counterfeit-V2.5.vae.pt'),
     ('Counterfeit-V2.5_pruned', 'Counterfeit-V2.5.vae.pt'),
     ('novelailatest-pruned', 'novelailatest-pruned.vae.pt'),
@@ -26,10 +29,18 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('AnythingV5Ink_ink', None),
     ('sweetfruit_melon.safetensors_v1.0', 'vae-ft-mse-840000-ema-pruned.ckpt'),
     ('cuteyukimixAdorable_midchapter3', 'anything-v4.0.vae.pt'),
+    ('cuteyukimixAdorable_neochapter3', 'anything-v4.0.vae.pt'),
+    ('cuteyukimixAdorable_specialchapter', 'anything-v4.0.vae.pt'),
+    ('cocotifacute_v20', 'novelailatest-pruned.vae.pt'),
     ('perfectWorld_v2Baked', None),
     ('perfectWorld_v6Baked', None),
     ('meinamix_meinaV11', None),
     ('cetusMix_Whalefall2', 'kl-f8-anime2.ckpt'),
+    ('cetusMix_v4', 'kl-f8-anime2.ckpt'),
+    ('sakuramochimix_v10', 'novelailatest-pruned.vae.pt'),
+    ('ghostmix_v20Bakedvae', None),
+    ('anyloraCheckpoint_novaeFp16', 'kl-f8-anime2.ckpt'),
+    ('PVCStyleModelMovable_v20NoVae', 'vae-ft-mse-840000-ema-pruned.ckpt'),
 ]
 
 
