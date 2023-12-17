@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 from tqdm import tqdm
 
-from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_model, 图像相似度
+from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_model, 图像相似度, 要测的标签
 
 
 要测的模型 = [
@@ -24,13 +24,16 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('novelailatest-pruned', 'novelailatest-pruned.vae.pt'),
     ('CounterfeitXL-V1.0', None),
     ('blue_pencil-XL-v0.3.1', None),
+    ('bluePencil_v9', 'clearvae_v23.safetensors'),
     ('bluePencil_v10', 'clearvae_v23.safetensors'),
     ('Counterfeit-V3.0_fp16', 'kl-f8-anime2.ckpt'),
     ('AnythingV5Ink_ink', None),
     ('sweetfruit_melon.safetensors_v1.0', 'vae-ft-mse-840000-ema-pruned.ckpt'),
+    ('cuteyukimixAdorable_midchapter2', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_midchapter3', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_neochapter3', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_specialchapter', 'anything-v4.0.vae.pt'),
+    ('cuteyukimixAdorable_naiV3style', 'anything-v4.0.vae.pt'),
     ('cocotifacute_v20', 'novelailatest-pruned.vae.pt'),
     ('perfectWorld_v2Baked', None),
     ('perfectWorld_v6Baked', None),
@@ -41,10 +44,10 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('ghostmix_v20Bakedvae', None),
     ('anyloraCheckpoint_novaeFp16', 'kl-f8-anime2.ckpt'),
     ('PVCStyleModelMovable_v20NoVae', 'vae-ft-mse-840000-ema-pruned.ckpt'),
+    ('divineelegancemix_V9', 'MoistMix.vae.pt'),
+    ('kaywaii_v50', 'clearvae_v23.safetensors'),
+    ('kaywaii_v80', 'clearvae_v23.safetensors'),
 ]
-
-
-要测的标签 = ['wagashi', 'lying', 'loafers', ':o', 'monochrome', 'gun', 'handjob', 'cover', 'wariza', 'greyscale', 'face-to-face', 'halterneck', 'christmas', 'bandages', 'breasts', 'bathroom', 'chopsticks', 'teacup', 'collar', 'fangs', 'eyeball', 'piercing', 'signature', 'handgun', 'ofuda', 'wings', 'halftone', 'chair', 'outline', 'standing', 'profile', 'angel', 'running', 'cityscape', 'uncensored', 'ahoge', 'city', 'solo', 'surprised', 'border', 'facepaint', 'bespectacled', 'kneeling', 'shibari', 'hoodie', 'pantyhose', 'anus', 'facial', 'night', 'pendant', 'forest', 'undercut', 'flower', 'capelet', 'pajamas', 'bedroom', 'hakama', 'logo', 'dildo', 'drooling', 'elf', 'crown', 'vampire', 'swimsuit', ':d', 'fairy', 'anklet', 'leotard', 'petals', 'anal', 'smirk', 'toes', 'suit', 'areolae', 'brooch', 'mask', 'cheerleader', 'sunflower', 'casual', 'serafuku', 'onsen', 'embarrassed', 'happy', 'sitting', 'tiara', 'eyelashes', 'buttons', 'tattoo', 'collarbone', 'midriff', 'apple', 'cake', 'armband', 'jewelry', 'magatama', 'walking', 'horns', 'monster', 'smug', 'scythe', 'ascot', 'cum', 'tongue', 'saliva', 'bald', 'wide-eyed', 'topless', 'classroom', 'barefoot', 'pumpkin', 'microskirt', 'drunk', 'breastplate', 'turtleneck', 'pocky', 'leash', 'road', 'alcohol', 'bodystocking', "jack-o'-lantern", 'serious', 'maid', 'miniskirt', 'coat', 'tears', 'carrot', 'underwear', 'lipstick', 'mole', 'lollipop', 'pussy', 'valentine', 'nude', 'formal', 'sketch', 'fishnets', 'witch', '1girl', 'back-to-back', 'siblings', 'bra', 'leggings', 'bowtie', 'beach', 'cigarette', ':<', 'teeth', 'braid', 'ninja', 'ass', 'forehead', 'bondage', 'ghost', 'bouquet', 'sky', 'choker', 'guitar', 'peach', 'back', 'bdsm', 'indoors', 'mountain', 'bloomers', 'water', 'nurse', 'candy', 'cosplay', 'cardigan', 'umbrella', 'see-through', 'grin', 'glint', 'silhouette', '2girls', 'building', 'crying', 'lips', 'sunglasses', 'waving', 'skirt', 'house', 'cape', 'glasses', 'peeing', 'blindfold', 'bracer', 'makeup', 'corset', 'penis', 'cuffs', '3d', 'hibiscus', 'kneehighs', 'tail', 'belt', 'halloween', 'child', 'moon', 'masturbation', 'headphones', 'vest', 'nature', 'outdoors', '1boy', 'backlighting', 'socks', 'pasties', 'chibi', 'scarf', 'field', 'strawberry', 'greaves', 'vibrator', 'bottomless', 'hood', 'pov', 'sun', 'hairpin', 'rose', 'gradient', 'rope', 'ejaculation', 'thong', 'cloud', 'blush', 'sisters', 'shorts', 'rain', 'blazer', 'frown', 'sidelocks', 'bangs', 'hairband', 'nipples', 'wristband', 'eyepatch', 'ocean', 'blurry', 'sword', 'striped', 'day', 'underbust', 'halo', 'eyeliner', 'sarong', 'portrait', 'bracelet', 'bow', 'holding', 'thighhighs', 'cloak', 'miko', 'slippers', 'pout', 'ribbon', 'popsicle', 'twins', 'sideboob', 't-shirt', 'tea', 'bandeau', 'boots', 'navel', 'lactation', 'robe', 'cleavage', 'obi', 'bangle', 'frills', 'sunset', 'sundress', 'fang', 'earrings', 'labcoat', 'panties', 'doll', 'kimono', 'pantyshot', 'twintails', 'condom', 'realistic', 'shackles', 'beret', 'furry', 'hairclip', 'armpits', 'letterboxed', 'heterochromia', 'pool', 'angry', 'blouse', 'testicles', 'mermaid', 'fish', 'smile', 'gloves', 'scared', 'dagger', 'uniform', 'jumping', 'undressing', 'sex', 'sad', '2boys', 'bandaid', 'backpack', 'salute', 'cameltoe', 'clitoris', 'armlet', 'idol', 'lace', 'squatting', 'bikini', 'apron', 'bell', 'upskirt', 'camera', 'chocolate', 'necktie', 'sparkle', 'ahegao', 'antlers', 'laughing', 'yukata', 'watermark', 'ruins', 'bodysuit', 'neckerchief', 'gag', 'censored', 'seiza', 'thighs', 'wand', 'nun', 'underboob', 'blood', 'necklace', 'close-up', 'plant', 'expressionless', 'waitress', ':p', 'camisole', 'mushroom', 'ponytail', 'dress', 'jeans', 'foreshortening', 'goggles', 'pointing', 'upside-down', 'microphone', 'lingerie']
 
 sampler = 'DPM++ 2M Karras'
 seed = 1
@@ -66,7 +69,7 @@ else:
     记录 = []
 
 
-for (model, VAE), m, i in tqdm([*itertools.product(要测的模型, (2, 4, 8, 16, 32, 64, 128), range(25))]):
+for (model, VAE), m, i in tqdm([*itertools.product(要测的模型, (2, 4, 8, 16, 32, 64, 128), range(50))]):
     if i == 0:
         random.seed(0)
 
@@ -96,7 +99,7 @@ for (model, VAE), m, i in tqdm([*itertools.product(要测的模型, (2, 4, 8, 16
         continue
     数量参数 = {
         'batch_size': 4,
-        'n_iter': 4,
+        'n_iter': 2,
     }
     r = 上网(f'{服务器地址}/sdapi/v1/txt2img', 数量参数 | 参数, 'post')
     图s = [base64.b64decode(b64) for b64 in r['images']]

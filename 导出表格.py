@@ -1,7 +1,7 @@
-import json
 import copy
-import numpy as np
 
+import orjson
+import numpy as np
 import pandas as pd
 
 
@@ -14,18 +14,35 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'anything-v4.5-pruned-fp32': 'A4.5',
         'Counterfeit-V2.2': 'CF2.2',
         'Counterfeit-V3.0_fp16': 'CF3.0',
-        'cosplaymix_v20': 'CM20',
+        'counterfeitV30_20': 'CF2.0',
+        'cosplaymix_v20': 'CPM20',
         'novelailatest-pruned': 'novelai',
         'sweetfruit_melon.safetensors_v1.0': 'SF1.0',
+        'bluePencil_v9': 'BP9',
         'bluePencil_v10': 'BP10',
         'blue_pencil-XL-v0.3.1': 'BPXL0.3.1',
         'CounterfeitXL-V1.0': 'CFXL1.0',
+        'cuteyukimixAdorable_midchapter2': 'CYM2',
         'cuteyukimixAdorable_midchapter3': 'CYM3',
+        'cuteyukimixAdorable_neochapter3': 'CYN3',
+        'cuteyukimixAdorable_specialchapter': 'CYS',
+        'cuteyukimixAdorable_naiV3style': 'CYnai3',
         'Counterfeit-V2.5_pruned': 'CF2.5',
+        'cocotifacute_v20': 'CC20',
         'perfectWorld_v2Baked': 'PW2',
         'perfectWorld_v6Baked': 'PW6',
         'meinamix_meinaV11': 'MM11',
+        'cetusMix_v4': 'CM4',
         'cetusMix_Whalefall2': 'CMWF2',
+        'sakuramochimix_v10': 'SM10',
+        'anyloraCheckpoint_novaeFp16': 'AL',
+        'anythingV3_fp16': 'A3',
+        'ghostmix_v20Bakedvae': 'GM20',
+        'aoaokoPVCStyleModel_pvcAOAOKO': 'APVC',
+        'PVCStyleModelMovable_v20NoVae': 'PVC20',
+        'divineelegancemix_V9': 'DLM9',
+        'kaywaii_v50': 'KW50',
+        'kaywaii_v80': 'KW80',
     }.get(x, x)
 
 
@@ -41,7 +58,7 @@ def _加粗(data: dict[str, list], yy):
 
 
 def 导出单标签():
-    l = json.load(open('savedata/记录.json', encoding='utf-8'))
+    l = orjson.loads(open('savedata/记录.json', encoding='utf-8').read())
     m = {}
     all_model = set()
     all_tag = set()
@@ -82,7 +99,7 @@ def 导出单标签():
     df = pd.DataFrame(data, index=好标签)
     output.write('# 模型对单标签-准确率: \n' + df.to_markdown() + '\n\n')
 
-    目录 = json.load(open('data/目录.json', encoding='utf-8'))
+    目录 = orjson.loads(open('data/目录.json', encoding='utf-8').read())
     逆转目录 = {}
     mm = {}
     for k, v in 目录.items():
@@ -112,8 +129,69 @@ def 导出单标签():
     output.write('# 模型对标签类别-准确率: \n' + df.to_markdown() + '\n\n')
 
 
+def 导出单标签2():
+    l = orjson.loads(open('savedata/记录.json', encoding='utf-8').read())
+    标签计数: dict[str, int] = {}
+    模型标签计数: dict[str, dict[str, int]] = {}
+    for d in l:
+        model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
+        计 = 模型标签计数.setdefault(model, {})
+        for v in d['预测标签'].values():
+            for kk, vv in v.items():
+                标签计数.setdefault(kk, 0)
+                标签计数[kk] += vv
+                计.setdefault(kk, 0)
+                计[kk] += vv
+    n = len(模型标签计数)
+    data = {}
+    for k, v in sorted(模型标签计数.items()):
+        差v = {kk: (vv / (标签计数.get(kk)/n + 1000)) for kk, vv in v.items()}
+        data[k] = [x[0] for x in sorted(差v.items(), key=lambda x: x[1], reverse=True)[:3]]
+    df = pd.DataFrame(data, index=['top1', 'top2', 'top3'])
+    output.write('# 模型偏好标签: \n' + df.to_markdown() + '\n\n')
+    breasts = {
+        'flat_chest': 0,
+        'small_breasts': 0.2,
+        'medium_breasts': 0.4,
+        'large_breasts': 0.6,
+        'huge_breasts': 0.8,
+        'gigantic_breasts': 1,
+    }
+    hair = {
+        'short_hair': 0,
+        'medium_hair': 0.25,
+        'long_hair': 0.5,
+        'very_long_hair': 0.75,
+        'absurdly_long_hair': 1,
+    }
+    头发颜色 = ['blue_hair', 'red_hair', 'pink_hair', 'purple_hair', 'brown_hair', 'orange_hair', 'black_hair', 'blonde_hair', 'dark_blue_hair', 'light_purple_hair', 'light_brown_hair', 'white_hair', 'silver_hair', 'grey_hair', 'light_blue_hair', 'green_hair']
+    q = {}
+    for k, v in sorted(模型标签计数.items()):
+        for 种类, d in [('胸部', breasts), ('头发', hair)]:
+            总个数 = 0
+            总分数 = 0
+            for h, hv in d.items():
+                总个数 += v.get(h, 0)
+                总分数 += v.get(h, 0) * hv
+            q.setdefault(k, {}).setdefault(种类, 总分数/总个数)
+        q[k]['颜色'] = max([(v.get(x, 0), x) for x in 头发颜色])[1].removesuffix('_hair').replace('blonde', 'yellow')
+    from bokeh.plotting import figure, show
+    from bokeh.models.annotations import Label
+    模型 = [*模型标签计数]
+    x = [q[i]['胸部'] for i in 模型]
+    y = [q[i]['头发'] for i in 模型]
+    color = [q[i]['颜色'] for i in 模型]
+    p = figure(title="散点图", x_axis_label="胸部大小", y_axis_label="头发长度", x_range = (min(x)-0.005, max(x)+0.01), width=1024, height=512)
+    p.circle(x, y, size=10, color=color)
+    for i in range(len(x)):
+        label = Label(x=x[i]+0.0016, y=y[i]-0.0058, text=模型[i], text_font_size='9pt')
+        p.add_layout(label)
+    show(p)
+
+
+
 def 导出多标签():
-    l = json.load(open('savedata/记录_多标签.json', encoding='utf-8'))
+    l = orjson.loads(open('savedata/记录_多标签.json', encoding='utf-8').read())
     m = {}
     for d in l:
         n = len(d['标签组'])
@@ -140,9 +218,32 @@ def 导出多标签():
                 acc = (a > 0.001).sum() / len(a.flatten())
                 data[model].append(round(acc, 3))
                 data2[model].append(round(1 - np.array(m[model, n]['相似度']).mean(), 3))
+                
     output.write('# 模型对标签个数-准确率: \n' + pd.DataFrame(_加粗(data, all_n), index=all_n).to_markdown() + '\n\n')
     output.write('# 模型对标签个数-多样性: \n' + pd.DataFrame(_加粗(data2, all_n), index=all_n).to_markdown() + '\n\n')
 
+    # from bokeh.plotting import figure, show
+    # from bokeh.models.annotations import Label
+    # x = [data[i][4] for i in all_model]
+    # y = [data2[i][4] for i in all_model]
+    # for i in range(len(x)):
+    #     for j in range(len(y)):
+    #         if i == j:
+    #             continue
+    #         if (((x[i]-x[j])/2)**2+(y[i]-y[j])**2)**0.5 < 0.002:    # 让点不要叠在一起
+    #             print(all_model[i], all_model[j])
+    #             x[i] -= (-1)**(x[i] > x[j]) * 0.0003
+    #             x[j] += (-1)**(x[i] > x[j]) * 0.0003
+    #             y[i] -= (-1)**(y[i] > y[j]) * 0.0003
+    #             y[j] += (-1)**(y[i] > y[j]) * 0.0003
+    # p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.01), width=1024, height=512)
+    # p.circle(x, y, size=10, color="blue", alpha=0.5)
+    # for i in range(len(x)):
+    #     label = Label(x=x[i]+0.001, y=y[i]-0.0013, text=all_model[i], text_font_size='9pt')
+    #     p.add_layout(label)
+    # show(p)
+
 
 导出单标签()
+导出单标签2()
 导出多标签()
