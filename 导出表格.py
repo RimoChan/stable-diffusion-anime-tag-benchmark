@@ -22,18 +22,26 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'bluePencil_v10': 'BP10',
         'blue_pencil-XL-v0.3.1': 'BPXL0.3.1',
         'CounterfeitXL-V1.0': 'CFXL1.0',
+        'counterfeitxl_v20': 'CFXL2.0',
+        'counterfeitxl_v25': 'CFXL2.5',
         'cuteyukimixAdorable_midchapter2': 'CYM2',
         'cuteyukimixAdorable_midchapter3': 'CYM3',
         'cuteyukimixAdorable_neochapter3': 'CYN3',
         'cuteyukimixAdorable_specialchapter': 'CYS',
         'cuteyukimixAdorable_naiV3style': 'CYnai3',
+        'cuteyukimixAdorable_kemiao': 'CYKM',
+        'cuteyukimixAdorable_kemiaomiao': 'CYKMM',
         'Counterfeit-V2.5_pruned': 'CF2.5',
         'cocotifacute_v20': 'CC20',
+        'etherBluMix_etherBluMix5': 'EB5',
         'perfectWorld_v2Baked': 'PW2',
         'perfectWorld_v6Baked': 'PW6',
         'meinamix_meinaV11': 'MM11',
+        'mixProV4_v4': 'MP4',
+        'cetusMix_cetusVersion3': 'CM3',
         'cetusMix_v4': 'CM4',
         'cetusMix_Whalefall2': 'CMWF2',
+        'cetusMix_Coda2': 'CMC2',
         'sakuramochimix_v10': 'SM10',
         'anyloraCheckpoint_novaeFp16': 'AL',
         'anythingV3_fp16': 'A3',
@@ -41,9 +49,18 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'aoaokoPVCStyleModel_pvcAOAOKO': 'APVC',
         'PVCStyleModelMovable_v20NoVae': 'PVC20',
         'divineelegancemix_V9': 'DLM9',
+        'darkSushiMixMix_225D': 'DS225',
+        'koji_v21': 'KJ21',
         'kaywaii_v50': 'KW50',
+        'kaywaii_v60': 'KW60',
+        'kaywaii_v70': 'KW70',
         'kaywaii_v80': 'KW80',
+        'rainbowsweets_v20': 'RS20',
+        'rabbit_v7': 'R7',
     }.get(x, x)
+
+
+readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW80', 'MM11', 'SF1.0', 'SM10', 'novelai', 'BPXL0.3.1', 'CFXL2.5'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -55,6 +72,22 @@ def _加粗(data: dict[str, list], yy):
             if data[x][i] in top and data[x][i] != '-':
                 data[x][i] = f'**{data[x][i]}**'
     return data
+
+
+def _分离(x: list[float], y: list[float], t=0.002, iter=2):
+    x = copy.deepcopy(x)
+    y = copy.deepcopy(y)
+    for _ in range(iter):
+        for i in range(len(x)):
+            for j in range(len(y)):
+                if i == j:
+                    continue
+                if (((x[i]-x[j])/3)**2+(y[i]-y[j])**2)**0.5 < t:
+                    x[i] -= (-1)**(x[i] > x[j]) * (t/10)
+                    x[j] += (-1)**(x[i] > x[j]) * (t/10)
+                    y[i] -= (-1)**(y[i] > y[j]) * (t/10)
+                    y[j] += (-1)**(y[i] > y[j]) * (t/10)
+    return x, y
 
 
 def 导出单标签():
@@ -125,6 +158,7 @@ def 导出单标签():
                     data[model].append('-')
                 else:
                     data[model].append(round(好 / n, 3))
+    # data = {k: v for k, v in data.items() if k in readme要的}
     df = pd.DataFrame(_加粗(data, sorted_目录), index=[目录[i]['name'] for i in sorted_目录])
     output.write('# 模型对标签类别-准确率: \n' + df.to_markdown() + '\n\n')
 
@@ -180,6 +214,7 @@ def 导出单标签2():
     模型 = [*模型标签计数]
     x = [q[i]['胸部'] for i in 模型]
     y = [q[i]['头发'] for i in 模型]
+    x, y = _分离(x, y, t=0.004)
     color = [q[i]['颜色'] for i in 模型]
     p = figure(title="散点图", x_axis_label="胸部大小", y_axis_label="头发长度", x_range = (min(x)-0.005, max(x)+0.01), width=1024, height=512)
     p.circle(x, y, size=10, color=color)
@@ -219,6 +254,9 @@ def 导出多标签():
                 data[model].append(round(acc, 3))
                 data2[model].append(round(1 - np.array(m[model, n]['相似度']).mean(), 3))
                 
+    # data = {k: v for k, v in data.items() if k in readme要的}
+    # data2 = {k: v for k, v in data2.items() if k in readme要的}
+
     output.write('# 模型对标签个数-准确率: \n' + pd.DataFrame(_加粗(data, all_n), index=all_n).to_markdown() + '\n\n')
     output.write('# 模型对标签个数-多样性: \n' + pd.DataFrame(_加粗(data2, all_n), index=all_n).to_markdown() + '\n\n')
 
@@ -226,24 +264,44 @@ def 导出多标签():
     # from bokeh.models.annotations import Label
     # x = [data[i][4] for i in all_model]
     # y = [data2[i][4] for i in all_model]
-    # for i in range(len(x)):
-    #     for j in range(len(y)):
-    #         if i == j:
-    #             continue
-    #         if (((x[i]-x[j])/2)**2+(y[i]-y[j])**2)**0.5 < 0.002:    # 让点不要叠在一起
-    #             print(all_model[i], all_model[j])
-    #             x[i] -= (-1)**(x[i] > x[j]) * 0.0003
-    #             x[j] += (-1)**(x[i] > x[j]) * 0.0003
-    #             y[i] -= (-1)**(y[i] > y[j]) * 0.0003
-    #             y[j] += (-1)**(y[i] > y[j]) * 0.0003
+    # x, y = _分离(x, y)
     # p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.01), width=1024, height=512)
     # p.circle(x, y, size=10, color="blue", alpha=0.5)
     # for i in range(len(x)):
-    #     label = Label(x=x[i]+0.001, y=y[i]-0.0013, text=all_model[i], text_font_size='9pt')
+    #     label = Label(x=x[i]+0.001, y=y[i]-0.0013, text=all_model[i], text_font_size='8pt')
     #     p.add_layout(label)
     # show(p)
+
+
+
+def 导出不同参数():
+    l = orjson.loads(open('savedata/记录_不同参数.json', encoding='utf-8').read())
+    d = {}
+    for i in l:
+        model = _模型改名(i['参数']['override_settings']['sd_model_checkpoint'])
+        参数 = i['参数']
+        x = f'{参数["width"]}×{参数["height"]}'
+        y = 参数['steps']
+        d.setdefault((model, x, y), []).extend(i['分数'])
+    dd = {}
+    for (model, x, y), 分数 in d.items(): 
+        a = np.array(分数)
+        acc = (a > 0.001).sum() / len(a.flatten())
+        dd.setdefault(model, {})[x, y] = acc
+    
+    output.write('# 不同模型在不同尺寸和step下的准确率: \n\n')
+    for model in dd:
+        all_x, all_y = map(sorted, map(set, zip(*dd[model].keys())))
+        data = {}
+        for x in all_x:
+            data[x] = []
+            for y in all_y:
+                data[x].append(dd[model][x, y])
+        output.write(f'## {model}\n')
+        output.write(f'{pd.DataFrame(data, index=all_y).to_markdown()}\n\n')
 
 
 导出单标签()
 导出单标签2()
 导出多标签()
+导出不同参数()
