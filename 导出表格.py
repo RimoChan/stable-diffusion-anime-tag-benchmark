@@ -1,17 +1,20 @@
 import copy
+from pathlib import Path
 
 import orjson
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 
-output = open('好.md', 'w', encoding='utf8')
+Path('测试结果').mkdir(exist_ok=True)
 
 
 def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
     return {
         'AnythingV5Ink_ink': 'A5Ink',
         'anything-v4.5-pruned-fp32': 'A4.5',
+        'calicomix_v75': 'CCM75',
         'Counterfeit-V2.2': 'CF2.2',
         'Counterfeit-V3.0_fp16': 'CF3.0',
         'counterfeitV30_20': 'CF2.0',
@@ -42,7 +45,8 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'cetusMix_v4': 'CM4',
         'cetusMix_Whalefall2': 'CMWF2',
         'cetusMix_Coda2': 'CMC2',
-        'sakuramochimix_v10': 'SM10',
+        'sakuramochimix_v10': 'SMM10',
+        'sweetMix_v22Flat': 'SM22F',
         'anyloraCheckpoint_novaeFp16': 'AL',
         'anythingV3_fp16': 'A3',
         'ghostmix_v20Bakedvae': 'GM20',
@@ -57,10 +61,20 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'kaywaii_v80': 'KW80',
         'rainbowsweets_v20': 'RS20',
         'rabbit_v7': 'R7',
+        'rimochan_random_mix': 'RRM',
+        'rimochan_random_mix_1.1': 'RRM1.1',
+        'Yorunohitsuji-v1.0': 'YH',
+        'Aidv210AnimeIllustDiffusion_aidv28': 'AID28',
+        'Aidv210AnimeIllustDiffusion_aidv210': 'AID210',
+        'hassakuXLSfwNsfwBeta_betaV01': 'HXLB01',
+        'reproductionSDXL_2v12': 'RXL2v12',
+        'animeIllustDiffusion_v052': 'AIDXL52',
+        'animeIllustDiffusion_v061': 'AIDXL61',
+        'kohakuXLBeta_beta7': 'KXLB7',
     }.get(x, x)
 
 
-readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW80', 'MM11', 'SF1.0', 'SM10', 'novelai', 'BPXL0.3.1', 'CFXL2.5'}
+readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW70', 'SF1.0', 'SM10', 'novelai', 'RRM1.1', 'BPXL0.3.1', 'CFXL2.5'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -74,7 +88,7 @@ def _加粗(data: dict[str, list], yy):
     return data
 
 
-def _分离(x: list[float], y: list[float], t=0.002, iter=2):
+def _分离(x: list[float], y: list[float], t=0.002, iter=3):
     x = copy.deepcopy(x)
     y = copy.deepcopy(y)
     for _ in range(iter):
@@ -91,18 +105,20 @@ def _分离(x: list[float], y: list[float], t=0.002, iter=2):
 
 
 def 导出单标签():
-    l = orjson.loads(open('savedata/记录.json', encoding='utf-8').read())
     m = {}
     all_model = set()
     all_tag = set()
-    for d in l:
-        model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
-        好 = len([i for i in d['分数'] if i > 0.1])
-        n = len(d['分数'])
-        assert (model, d['标签']) not in m
-        m[model, d['标签']] = 好, n
-        all_model.add(model)
-        all_tag.add(d['标签'])
+    for 文件 in tqdm([*Path('savedata').glob('单标签_*_记录.json')]):
+        for d in orjson.loads(open(文件, 'rb').read()):
+            sd_model_checkpoint = d['参数']['override_settings']['sd_model_checkpoint']
+            assert sd_model_checkpoint in str(文件)
+            model = _模型改名(sd_model_checkpoint)
+            好 = len([i for i in d['分数'] if i > 0.1])
+            n = len(d['分数'])
+            assert (model, d['标签']) not in m
+            m[model, d['标签']] = 好, n
+            all_model.add(model)
+            all_tag.add(d['标签'])
     all_model = sorted(all_model, key=lambda x: x if 'XL' in x else '0' + x)
     all_tag = sorted(all_tag)
 
@@ -130,7 +146,8 @@ def 导出单标签():
                 好, n = t
                 data[model].append(好 / n)
     df = pd.DataFrame(data, index=好标签)
-    output.write('# 模型对单标签-准确率: \n' + df.to_markdown() + '\n\n')
+    with open('测试结果/模型对单标签-准确率.md', 'w', encoding='utf8') as f:
+        f.write('# 模型对单标签-准确率: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
     目录 = orjson.loads(open('data/目录.json', encoding='utf-8').read())
     逆转目录 = {}
@@ -160,29 +177,31 @@ def 导出单标签():
                     data[model].append(round(好 / n, 3))
     # data = {k: v for k, v in data.items() if k in readme要的}
     df = pd.DataFrame(_加粗(data, sorted_目录), index=[目录[i]['name'] for i in sorted_目录])
-    output.write('# 模型对标签类别-准确率: \n' + df.to_markdown() + '\n\n')
+    with open('测试结果/模型对标签类别-准确率.md', 'w', encoding='utf8') as f:
+        f.write('# 模型对标签类别-准确率: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
 
 def 导出单标签2():
-    l = orjson.loads(open('savedata/记录.json', encoding='utf-8').read())
     标签计数: dict[str, int] = {}
     模型标签计数: dict[str, dict[str, int]] = {}
-    for d in l:
-        model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
-        计 = 模型标签计数.setdefault(model, {})
-        for v in d['预测标签'].values():
-            for kk, vv in v.items():
-                标签计数.setdefault(kk, 0)
-                标签计数[kk] += vv
-                计.setdefault(kk, 0)
-                计[kk] += vv
+    for 文件 in tqdm([*Path('savedata').glob('单标签_*_记录.json')]):
+        for d in orjson.loads(open(文件, 'rb').read()):
+            model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
+            计 = 模型标签计数.setdefault(model, {})
+            for v in d['预测标签'].values():
+                for kk, vv in v.items():
+                    标签计数.setdefault(kk, 0)
+                    标签计数[kk] += vv
+                    计.setdefault(kk, 0)
+                    计[kk] += vv
     n = len(模型标签计数)
     data = {}
     for k, v in sorted(模型标签计数.items()):
         差v = {kk: (vv / (标签计数.get(kk)/n + 1000)) for kk, vv in v.items()}
         data[k] = [x[0] for x in sorted(差v.items(), key=lambda x: x[1], reverse=True)[:3]]
     df = pd.DataFrame(data, index=['top1', 'top2', 'top3'])
-    output.write('# 模型偏好标签: \n' + df.to_markdown() + '\n\n')
+    with open('测试结果/模型偏好标签.md', 'w', encoding='utf8') as f:
+        f.write('# 模型偏好标签: \n' + df.to_markdown() + '\n\n')
     breasts = {
         'flat_chest': 0,
         'small_breasts': 0.2,
@@ -231,6 +250,8 @@ def 导出多标签():
     for d in l:
         n = len(d['标签组'])
         model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
+        if '+' in model or model in ('rimo_random_mix_1', 'rimo_random_mix_2'):
+            continue
         m.setdefault((model, n), {'相似度': [], '分数': []})
         m[model, n]['相似度'].extend(d['相似度'])
         m[model, n]['分数'].extend(d['分数'])
@@ -253,22 +274,28 @@ def 导出多标签():
                 acc = (a > 0.001).sum() / len(a.flatten())
                 data[model].append(round(acc, 3))
                 data2[model].append(round(1 - np.array(m[model, n]['相似度']).mean(), 3))
-                
     # data = {k: v for k, v in data.items() if k in readme要的}
     # data2 = {k: v for k, v in data2.items() if k in readme要的}
 
-    output.write('# 模型对标签个数-准确率: \n' + pd.DataFrame(_加粗(data, all_n), index=all_n).to_markdown() + '\n\n')
-    output.write('# 模型对标签个数-多样性: \n' + pd.DataFrame(_加粗(data2, all_n), index=all_n).to_markdown() + '\n\n')
+    with open('测试结果/模型对标签个数.md', 'w', encoding='utf8') as f:
+        f.write('# 模型对标签个数-准确率: \n\n<sub>\n\n' + pd.DataFrame(_加粗(data, all_n), index=all_n).to_markdown() + '\n\n</sub>\n\n')
+        f.write('# 模型对标签个数-多样性: \n\n<sub>\n\n' + pd.DataFrame(_加粗(data2, all_n), index=all_n).to_markdown() + '\n\n</sub>\n\n')
 
     # from bokeh.plotting import figure, show
     # from bokeh.models.annotations import Label
     # x = [data[i][4] for i in all_model]
     # y = [data2[i][4] for i in all_model]
+    # for i, v in enumerate(x):
+    #     if v == '-':
+    #         x[i] = 0
+    # for i, v in enumerate(y):
+    #     if v == '-':
+    #         y[i] = 0
     # x, y = _分离(x, y)
     # p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.01), width=1024, height=512)
     # p.circle(x, y, size=10, color="blue", alpha=0.5)
     # for i in range(len(x)):
-    #     label = Label(x=x[i]+0.001, y=y[i]-0.0013, text=all_model[i], text_font_size='8pt')
+    #     label = Label(x=x[i]+0.0001, y=y[i]-0.0001, text=all_model[i], text_font_size='8pt')
     #     p.add_layout(label)
     # show(p)
 
@@ -289,16 +316,17 @@ def 导出不同参数():
         acc = (a > 0.001).sum() / len(a.flatten())
         dd.setdefault(model, {})[x, y] = acc
     
-    output.write('# 不同模型在不同尺寸和step下的准确率: \n\n')
-    for model in dd:
-        all_x, all_y = map(sorted, map(set, zip(*dd[model].keys())))
-        data = {}
-        for x in all_x:
-            data[x] = []
-            for y in all_y:
-                data[x].append(dd[model][x, y])
-        output.write(f'## {model}\n')
-        output.write(f'{pd.DataFrame(data, index=all_y).to_markdown()}\n\n')
+    with open('测试结果/不同模型在不同尺寸和step下的准确率.md', 'w', encoding='utf8') as f:
+        f.write('# 不同模型在不同尺寸和step下的准确率: \n\n')
+        for model in dd:
+            all_x, all_y = map(sorted, map(set, zip(*dd[model].keys())))
+            data = {}
+            for x in all_x:
+                data[x] = []
+                for y in all_y:
+                    data[x].append(dd[model][x, y])
+            f.write(f'## {model}\n')
+            f.write(f'{pd.DataFrame(data, index=all_y).to_markdown()}\n\n')
 
 
 导出单标签()

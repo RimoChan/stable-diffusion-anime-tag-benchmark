@@ -1,10 +1,10 @@
-import json
 import random
 import base64
 import hashlib
 import itertools
 from pathlib import Path
 
+import orjson
 from PIL import Image
 from tqdm import tqdm
 
@@ -17,6 +17,9 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('AOM3A1', 'orangemix.vae.pt'),
     ('AOM3A2', 'orangemix.vae.pt'),
     ('aoaokoPVCStyleModel_pvcAOAOKO', 'novelailatest-pruned.vae.pt'),
+    ('Aidv210AnimeIllustDiffusion_aidv28', 'vae-ft-mse-840000-ema-pruned.ckpt'),
+    ('Aidv210AnimeIllustDiffusion_aidv210', 'vae-ft-mse-840000-ema-pruned.ckpt'),
+    ('calicomix_v75', None),
     ('cosplaymix_v20', None),
     ('counterfeitV30_20', 'Counterfeit-V2.5.vae.pt'),
     ('Counterfeit-V2.2', 'Counterfeit-V2.5.vae.pt'),
@@ -24,7 +27,6 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('novelailatest-pruned', 'novelailatest-pruned.vae.pt'),
     ('darkSushiMixMix_225D', 'vae-ft-mse-840000-ema-pruned.ckpt'),
     ('etherBluMix_etherBluMix5', 'kl-f8-anime2.ckpt'),
-    ('blue_pencil-XL-v0.3.1', None),
     ('bluePencil_v9', 'clearvae_v23.safetensors'),
     ('bluePencil_v10', 'clearvae_v23.safetensors'),
     ('Counterfeit-V3.0_fp16', 'kl-f8-anime2.ckpt'),
@@ -47,20 +49,30 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('cetusMix_Whalefall2', 'kl-f8-anime2.ckpt'),
     ('cetusMix_v4', 'kl-f8-anime2.ckpt'),
     ('sakuramochimix_v10', 'novelailatest-pruned.vae.pt'),
+    ('sweetMix_v22Flat', 'blessed2.vae.safetensors'),
     ('ghostmix_v20Bakedvae', None),
     ('anyloraCheckpoint_novaeFp16', 'kl-f8-anime2.ckpt'),
     ('PVCStyleModelMovable_v20NoVae', 'vae-ft-mse-840000-ema-pruned.ckpt'),
     ('divineelegancemix_V9', 'MoistMix.vae.pt'),
     ('rainbowsweets_v20', None),
     ('rabbit_v7', 'novelailatest-pruned.vae.pt'),
+    ('rimochan_random_mix', 'blessed2.vae.safetensors'),
+    ('rimochan_random_mix_1.1', 'blessed2.vae.safetensors'),
     ('koji_v21', 'clearvae_v23.safetensors'),
     ('kaywaii_v50', 'clearvae_v23.safetensors'),
     ('kaywaii_v60', 'clearvae_v23.safetensors'),
     ('kaywaii_v70', 'clearvae_v23.safetensors'),
     ('kaywaii_v80', 'clearvae_v23.safetensors'),
+    ('Yorunohitsuji-v1.0', 'novelailatest-pruned.vae.pt'),
+    ('animeIllustDiffusion_v052', 'sdxl_vae.safetensors'),
+    ('animeIllustDiffusion_v061', 'sdxl_vae.safetensors'),
     ('CounterfeitXL-V1.0', None),
     ('counterfeitxl_v20', None),
     ('counterfeitxl_v25', None),
+    ('hassakuXLSfwNsfwBeta_betaV01', None),
+    ('reproductionSDXL_2v12', None),
+    ('kohakuXLBeta_beta7', 'sdxl_vae.safetensors'),
+    ('blue_pencil-XL-v0.3.1', None),
 ]
 
 sampler = 'DPM++ 2M Karras'
@@ -78,63 +90,74 @@ check_model(要测的模型)
 
 if Path('savedata/记录_多标签.json').exists():
     with open('savedata/记录_多标签.json', 'r', encoding='utf8') as f:
-        记录 = json.load(f)
+        记录 = orjson.loads(f.read())
 else:
     记录 = []
 
 
-for (model, VAE), m, i in tqdm([*itertools.product(要测的模型, (2, 4, 8, 16, 32, 64, 128), range(50))]):
-    if i == 0:
-        random.seed(0)
+def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True):
+    rd = random.Random(0)
+    本地记录 = []
+    iterator = range(n_iter)
+    if use_tqdm:
+        iterator = tqdm(iterator, ncols=70, desc=f'{m}-{model[:10]}')
+    for index in iterator:
+        标签组 = rd.sample(要测的标签, m)
+        标签组 = [i.strip().replace(' ', '_') for i in 标签组]
+        参数 = {
+            'prompt': f'1 girl, {", ".join(标签组)}',
+            'negative_prompt': 'worst quality, low quality, blurry, greyscale, monochrome',
+            'seed': seed,
+            'width': width,
+            'height': height,
+            'steps': steps,
+            'sampler_index': sampler,
+            'cfg_scale': cfg_scale,
+            'override_settings': {
+                'sd_model_checkpoint': model,
+                'sd_vae': VAE,
+            },
+        }
+        skip = False
+        for i in 记录:
+            if i['标签组'] == 标签组 and i['参数'] == 参数:
+                skip = True
+                break
+        if skip:
+            本地记录.append(i)
+            continue
+        数量参数 = {
+            'batch_size': 4,
+            'n_iter': 2,
+        }
+        r = 上网(f'{服务器地址}/sdapi/v1/txt2img', 数量参数 | 参数, 'post')
+        图s = [base64.b64decode(b64) for b64 in r['images']]
+        md5 = hashlib.md5(str(标签组).encode()).hexdigest()
+        for i, b in enumerate(图s):
+            with open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png'), 'wb') as f:
+                f.write(b)
+        n = len(图s)
+        预测标签 = ml_danbooru标签([存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png') for i in range(n)])
 
-    标签组 = random.sample(要测的标签, m)
-    标签组 = [i.strip().replace(' ', '_') for i in 标签组]
+        相似度 = []
+        for a, b in itertools.pairwise([Image.open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png')) for i in range(n)]):
+            相似度.append(图像相似度(a, b))
 
-    参数 = {
-        'prompt': f'1 girl, {", ".join(标签组)}',
-        'negative_prompt': 'worst quality, low quality, blurry, greyscale, monochrome',
-        'seed': seed,
-        'width': width,
-        'height': height,
-        'steps': steps,
-        'sampler_index': sampler,
-        'cfg_scale': cfg_scale,
-        'override_settings': {
-            'sd_model_checkpoint': model,
-            'sd_vae': VAE,
-        },
-    }
-    skip = False
-    for i in 记录:
-        if i['标签组'] == 标签组 and i['参数'] == 参数:
-            skip = True
-            break
-    if skip:
-        continue
-    数量参数 = {
-        'batch_size': 4,
-        'n_iter': 2,
-    }
-    r = 上网(f'{服务器地址}/sdapi/v1/txt2img', 数量参数 | 参数, 'post')
-    图s = [base64.b64decode(b64) for b64 in r['images']]
-    md5 = hashlib.md5(str(标签组).encode()).hexdigest()
-    for i, b in enumerate(图s):
-        with open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png'), 'wb') as f:
-            f.write(b)
-    n = len(图s)
-    预测标签 = ml_danbooru标签([存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png') for i in range(n)])
+        录 = {
+            '分数': [[i.get(j, 0) for j in 标签组] for i in 预测标签.values()],
+            '相似度': 相似度,
+            '总数': n,
+            '标签组': 标签组,
+            '参数': 参数,
+        }
+        本地记录.append(录)
+        记录.append(录)
+    if savedata:
+        with open('savedata/记录_多标签.json', 'wb') as f:
+            f.write(orjson.dumps(记录))
+    return 本地记录
 
-    相似度 = []
-    for a, b in itertools.pairwise([Image.open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png')) for i in range(n)]):
-        相似度.append(图像相似度(a, b))
 
-    录 = {
-        '分数': [[i.get(j, 0) for j in 标签组] for i in 预测标签.values()],
-        '相似度': 相似度,
-        '总数': n,
-        '标签组': 标签组,
-        '参数': 参数,
-    }
-    记录.append(录)
-    with open('savedata/记录_多标签.json', 'w', encoding='utf8') as f:
-        f.write(json.dumps(记录, ensure_ascii=False, indent=2))
+if __name__ == '__main__':
+    for (model, VAE), (m, n_iter) in tqdm([*itertools.product(要测的模型, ((2, 110), (4, 100), (8, 90), (16, 80), (32, 70), (64, 60), (128, 50)))]):
+        评测模型(model, VAE, m, n_iter)

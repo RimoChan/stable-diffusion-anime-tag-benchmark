@@ -1,5 +1,6 @@
 import os
 import re
+import base64
 from typing import Union, Optional
 
 import requests
@@ -35,6 +36,11 @@ def 上网(p, j=None, method='get'):
 @rimo_storage.cache.disk_cache(serialize='pickle')
 def 缓存上网(p, j=None, method='get'):
     return 上网(p, j=j, method=method)
+
+
+def txt2img(p: dict):
+    r = 缓存上网(f'{服务器地址}/sdapi/v1/txt2img', p, 'post')
+    return [base64.b64decode(b64) for b64 in r['images']]
 
 
 def check_model(要测的模型: list[tuple[Optional[str]]]):
