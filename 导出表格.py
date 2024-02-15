@@ -14,6 +14,7 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
     return {
         'AnythingV5Ink_ink': 'A5Ink',
         'anything-v4.5-pruned-fp32': 'A4.5',
+        'ApricotEyes_v10': 'AE10',
         'calicomix_v75': 'CCM75',
         'Counterfeit-V2.2': 'CF2.2',
         'Counterfeit-V3.0_fp16': 'CF3.0',
@@ -27,8 +28,12 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'CounterfeitXL-V1.0': 'CFXL1.0',
         'counterfeitxl_v20': 'CFXL2.0',
         'counterfeitxl_v25': 'CFXL2.5',
+        'cuteyukimixAdorable_echodimension': 'CYE',
+        'cuteyukimixAdorable_midchapter': 'CYM',
         'cuteyukimixAdorable_midchapter2': 'CYM2',
         'cuteyukimixAdorable_midchapter3': 'CYM3',
+        'cuteyukimixAdorable_neochapter': 'CYN',
+        'cuteyukimixAdorable_neochapter2': 'CYN2',
         'cuteyukimixAdorable_neochapter3': 'CYN3',
         'cuteyukimixAdorable_specialchapter': 'CYS',
         'cuteyukimixAdorable_naiV3style': 'CYnai3',
@@ -37,10 +42,17 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'Counterfeit-V2.5_pruned': 'CF2.5',
         'cocotifacute_v20': 'CC20',
         'etherBluMix_etherBluMix5': 'EB5',
+        'jitq_v20': 'JQ20',
+        'jitq_v30': 'JQ30',
+        'himawarimix_v100': 'HW100',
+        'pastelMixStylizedAnime_pastelMixPrunedFP16': 'PM',
+        'petitcutie_v15': 'PC15',
+        'petitcutie_v20': 'PC20',
         'perfectWorld_v2Baked': 'PW2',
         'perfectWorld_v6Baked': 'PW6',
         'meinamix_meinaV11': 'MM11',
         'mixProV4_v4': 'MP4',
+        'cetusMix_cetusVersion2': 'CM2',
         'cetusMix_cetusVersion3': 'CM3',
         'cetusMix_v4': 'CM4',
         'cetusMix_Whalefall2': 'CMWF2',
@@ -52,17 +64,24 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'ghostmix_v20Bakedvae': 'GM20',
         'aoaokoPVCStyleModel_pvcAOAOKO': 'APVC',
         'PVCStyleModelMovable_v20NoVae': 'PVC20',
+        'PVCStyleModelMovable_v30': 'PVC30',
+        'PVCStyleModelFantasy_betaV10': 'PVCFB10',
         'divineelegancemix_V9': 'DLM9',
         'darkSushiMixMix_225D': 'DS225',
+        'superInvincibleAnd_v2': 'SIA2',
         'koji_v21': 'KJ21',
         'kaywaii_v50': 'KW50',
         'kaywaii_v60': 'KW60',
         'kaywaii_v70': 'KW70',
         'kaywaii_v80': 'KW80',
+        'kaywaii_v85': 'KW85',
+        'kaywaii_v90': 'KW90',
         'rainbowsweets_v20': 'RS20',
         'rabbit_v7': 'R7',
         'rimochan_random_mix': 'RRM',
         'rimochan_random_mix_1.1': 'RRM1.1',
+        'rimochan_random_mix_2.0': 'RRM2',
+        'rimochan_random_mix_2.1': 'RRM2.1',
         'Yorunohitsuji-v1.0': 'YH',
         'Aidv210AnimeIllustDiffusion_aidv28': 'AID28',
         'Aidv210AnimeIllustDiffusion_aidv210': 'AID210',
@@ -74,7 +93,7 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
     }.get(x, x)
 
 
-readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW70', 'SF1.0', 'SM10', 'novelai', 'RRM1.1', 'BPXL0.3.1', 'CFXL2.5'}
+readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW70', 'SF1.0', 'SM10', 'novelai', 'RRM2.1', 'BPXL0.3.1', 'CFXL2.5'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -146,6 +165,7 @@ def 导出单标签():
                 好, n = t
                 data[model].append(好 / n)
     df = pd.DataFrame(data, index=好标签)
+    df.to_pickle('测试结果/模型对单标签-准确率.pkl')
     with open('测试结果/模型对单标签-准确率.md', 'w', encoding='utf8') as f:
         f.write('# 模型对单标签-准确率: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
@@ -177,6 +197,7 @@ def 导出单标签():
                     data[model].append(round(好 / n, 3))
     # data = {k: v for k, v in data.items() if k in readme要的}
     df = pd.DataFrame(_加粗(data, sorted_目录), index=[目录[i]['name'] for i in sorted_目录])
+    df.to_pickle('测试结果/模型对标签类别-准确率.pkl')
     with open('测试结果/模型对标签类别-准确率.md', 'w', encoding='utf8') as f:
         f.write('# 模型对标签类别-准确率: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
@@ -196,10 +217,11 @@ def 导出单标签2():
                     计[kk] += vv
     n = len(模型标签计数)
     data = {}
+    top_n = 8
     for k, v in sorted(模型标签计数.items()):
         差v = {kk: (vv / (标签计数.get(kk)/n + 1000)) for kk, vv in v.items()}
-        data[k] = [x[0] for x in sorted(差v.items(), key=lambda x: x[1], reverse=True)[:3]]
-    df = pd.DataFrame(data, index=['top1', 'top2', 'top3'])
+        data[k] = [x[0] for x in sorted(差v.items(), key=lambda x: x[1], reverse=True)[:top_n]]
+    df = pd.DataFrame(data, index=[f'top_{i}' for i in [*range(1, top_n+1)]])
     with open('测试结果/模型偏好标签.md', 'w', encoding='utf8') as f:
         f.write('# 模型偏好标签: \n' + df.to_markdown() + '\n\n')
     breasts = {
@@ -235,10 +257,10 @@ def 导出单标签2():
     y = [q[i]['头发'] for i in 模型]
     x, y = _分离(x, y, t=0.004)
     color = [q[i]['颜色'] for i in 模型]
-    p = figure(title="散点图", x_axis_label="胸部大小", y_axis_label="头发长度", x_range = (min(x)-0.005, max(x)+0.01), width=1024, height=512)
+    p = figure(title="散点图", x_axis_label="胸部大小", y_axis_label="头发长度", x_range = (min(x)-0.005, max(x)+0.01), width=1280, height=640)
     p.circle(x, y, size=10, color=color)
     for i in range(len(x)):
-        label = Label(x=x[i]+0.0016, y=y[i]-0.0058, text=模型[i], text_font_size='9pt')
+        label = Label(x=x[i]+0.0014, y=y[i]-0.0046, text=模型[i], text_font_size='9pt')
         p.add_layout(label)
     show(p)
 
@@ -292,10 +314,10 @@ def 导出多标签():
     #     if v == '-':
     #         y[i] = 0
     # x, y = _分离(x, y)
-    # p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.01), width=1024, height=512)
+    # p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.01), width=1280, height=640)
     # p.circle(x, y, size=10, color="blue", alpha=0.5)
     # for i in range(len(x)):
-    #     label = Label(x=x[i]+0.0001, y=y[i]-0.0001, text=all_model[i], text_font_size='8pt')
+    #     label = Label(x=x[i]+0.001, y=y[i]-0.0011, text=all_model[i], text_font_size='8pt')
     #     p.add_layout(label)
     # show(p)
 
@@ -329,7 +351,31 @@ def 导出不同参数():
             f.write(f'{pd.DataFrame(data, index=all_y).to_markdown()}\n\n')
 
 
-导出单标签()
-导出单标签2()
-导出多标签()
-导出不同参数()
+def 导出clip_skip():
+    l = orjson.loads(open('savedata/记录_clip_skip.json', encoding='utf-8').read())
+    d = {}
+    for i in l:
+        model = _模型改名(i['参数']['override_settings']['sd_model_checkpoint'])
+        c = i['参数']['override_settings']['CLIP_stop_at_last_layers']
+        d.setdefault((model, c), []).extend(i['分数'])
+    dd = {}
+    for (model, c), 分数 in d.items(): 
+        a = np.array(分数)
+        acc = (a > 0.001).sum() / len(a.flatten())
+        dd.setdefault(model, {})[c] = acc
+    data = {}
+    for model in dd:
+        data[model] = []
+        for c in sorted(dd[model].keys()):
+            data[model].append(dd[model][c])
+    with open('测试结果/不同模型在不同clip_skip下的准确率.md', 'w', encoding='utf8') as f:
+        f.write('# 不同模型在不同clip_skip下的准确率: \n\n')
+        f.write(f'{pd.DataFrame(data, index=sorted(dd[model].keys())).to_markdown()}\n\n')
+
+
+if __name__ == '__main__':
+    导出单标签()
+    导出单标签2()
+    导出多标签()
+    导出不同参数()
+    导出clip_skip()

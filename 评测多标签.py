@@ -8,7 +8,7 @@ import orjson
 from PIL import Image
 from tqdm import tqdm
 
-from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_model, 图像相似度, 要测的标签
+from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_model, 图像相似度, 要测的标签, 参数相同
 
 
 要测的模型 = [
@@ -32,37 +32,54 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('Counterfeit-V3.0_fp16', 'kl-f8-anime2.ckpt'),
     ('AnythingV5Ink_ink', None),
     ('sweetfruit_melon.safetensors_v1.0', 'vae-ft-mse-840000-ema-pruned.ckpt'),
+    ('cuteyukimixAdorable_midchapter', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_midchapter2', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_midchapter3', 'anything-v4.0.vae.pt'),
+    ('cuteyukimixAdorable_neochapter', 'anything-v4.0.vae.pt'),
+    ('cuteyukimixAdorable_neochapter2', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_neochapter3', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_specialchapter', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_naiV3style', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_kemiao', 'anything-v4.0.vae.pt'),
     ('cuteyukimixAdorable_kemiaomiao', 'anything-v4.0.vae.pt'),
+    ('cuteyukimixAdorable_echodimension', 'anything-v4.0.vae.pt'),
     ('cocotifacute_v20', 'novelailatest-pruned.vae.pt'),
+    ('pastelMixStylizedAnime_pastelMixPrunedFP16', 'kl-f8-anime2.ckpt'),
     ('perfectWorld_v2Baked', None),
     ('perfectWorld_v6Baked', None),
+    ('himawarimix_v100', None),
     ('meinamix_meinaV11', None),
     ('mixProV4_v4', 'novelailatest-pruned.vae.pt'),
     ('cetusMix_cetusVersion3', 'kl-f8-anime2.ckpt'),
     ('cetusMix_Coda2', 'kl-f8-anime2.ckpt'),
     ('cetusMix_Whalefall2', 'kl-f8-anime2.ckpt'),
     ('cetusMix_v4', 'kl-f8-anime2.ckpt'),
+    ('cetusMix_cetusVersion2', 'kl-f8-anime2.ckpt'),
     ('sakuramochimix_v10', 'novelailatest-pruned.vae.pt'),
     ('sweetMix_v22Flat', 'blessed2.vae.safetensors'),
     ('ghostmix_v20Bakedvae', None),
     ('anyloraCheckpoint_novaeFp16', 'kl-f8-anime2.ckpt'),
     ('PVCStyleModelMovable_v20NoVae', 'vae-ft-mse-840000-ema-pruned.ckpt'),
+    ('PVCStyleModelMovable_v30', 'vae-ft-mse-840000-ema-pruned.ckpt'),
     ('divineelegancemix_V9', 'MoistMix.vae.pt'),
     ('rainbowsweets_v20', None),
     ('rabbit_v7', 'novelailatest-pruned.vae.pt'),
     ('rimochan_random_mix', 'blessed2.vae.safetensors'),
     ('rimochan_random_mix_1.1', 'blessed2.vae.safetensors'),
+    ('rimochan_random_mix_2.1', 'blessed2.vae.safetensors'),
     ('koji_v21', 'clearvae_v23.safetensors'),
     ('kaywaii_v50', 'clearvae_v23.safetensors'),
     ('kaywaii_v60', 'clearvae_v23.safetensors'),
     ('kaywaii_v70', 'clearvae_v23.safetensors'),
     ('kaywaii_v80', 'clearvae_v23.safetensors'),
+    ('kaywaii_v85', 'clearvae_v23.safetensors'),
+    ('kaywaii_v90', 'clearvae_v23.safetensors'),
+    ('jitq_v20', 'blessed2.vae.safetensors'),
+    ('jitq_v30', 'blessed2.vae.safetensors'),
+    ('petitcutie_v15', 'blessed2.vae.safetensors'),
+    ('petitcutie_v20', 'blessed2.vae.safetensors'),
+    ('superInvincibleAnd_v2', 'blessed2.vae.safetensors'),
+    ('ApricotEyes_v10', 'blessed2.vae.safetensors'),
     ('Yorunohitsuji-v1.0', 'novelailatest-pruned.vae.pt'),
     ('animeIllustDiffusion_v052', 'sdxl_vae.safetensors'),
     ('animeIllustDiffusion_v061', 'sdxl_vae.safetensors'),
@@ -73,6 +90,7 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('reproductionSDXL_2v12', None),
     ('kohakuXLBeta_beta7', 'sdxl_vae.safetensors'),
     ('blue_pencil-XL-v0.3.1', None),
+    ('PVCStyleModelFantasy_betaV10', 'sdxl_vae.safetensors'),
 ]
 
 sampler = 'DPM++ 2M Karras'
@@ -95,7 +113,7 @@ else:
     记录 = []
 
 
-def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True):
+def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True, extra_prompt=''):
     rd = random.Random(0)
     本地记录 = []
     iterator = range(n_iter)
@@ -105,7 +123,7 @@ def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True):
         标签组 = rd.sample(要测的标签, m)
         标签组 = [i.strip().replace(' ', '_') for i in 标签组]
         参数 = {
-            'prompt': f'1 girl, {", ".join(标签组)}',
+            'prompt': f'1 girl, {", ".join(标签组)}'+extra_prompt,
             'negative_prompt': 'worst quality, low quality, blurry, greyscale, monochrome',
             'seed': seed,
             'width': width,
@@ -116,11 +134,12 @@ def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True):
             'override_settings': {
                 'sd_model_checkpoint': model,
                 'sd_vae': VAE,
+                'CLIP_stop_at_last_layers': 1,
             },
         }
         skip = False
         for i in 记录:
-            if i['标签组'] == 标签组 and i['参数'] == 参数:
+            if i['标签组'] == 标签组 and 参数相同(i['参数'], 参数):
                 skip = True
                 break
         if skip:
