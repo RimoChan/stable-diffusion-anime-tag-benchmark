@@ -15,6 +15,7 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'AnythingV5Ink_ink': 'A5Ink',
         'anything-v4.5-pruned-fp32': 'A4.5',
         'ApricotEyes_v10': 'AE10',
+        'aiceKawaice_channel': 'AKC',
         'calicomix_v75': 'CCM75',
         'Counterfeit-V2.2': 'CF2.2',
         'Counterfeit-V3.0_fp16': 'CF3.0',
@@ -28,6 +29,7 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'CounterfeitXL-V1.0': 'CFXL1.0',
         'counterfeitxl_v20': 'CFXL2.0',
         'counterfeitxl_v25': 'CFXL2.5',
+        'coharumix_v6': 'CHM6',
         'cuteyukimixAdorable_echodimension': 'CYE',
         'cuteyukimixAdorable_midchapter': 'CYM',
         'cuteyukimixAdorable_midchapter2': 'CYM2',
@@ -42,6 +44,7 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'Counterfeit-V2.5_pruned': 'CF2.5',
         'cocotifacute_v20': 'CC20',
         'etherBluMix_etherBluMix5': 'EB5',
+        'irismix_v90': 'I90',
         'jitq_v20': 'JQ20',
         'jitq_v30': 'JQ30',
         'himawarimix_v100': 'HW100',
@@ -82,7 +85,10 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
         'rimochan_random_mix_1.1': 'RRM1.1',
         'rimochan_random_mix_2.0': 'RRM2',
         'rimochan_random_mix_2.1': 'RRM2.1',
+        'rimochan_random_mix_3.2': 'RRM3.2',
+        'theWondermix_v12': 'TWM12',
         'Yorunohitsuji-v1.0': 'YH',
+        'yetanotheranimemodel_v20': 'YAA20',
         'Aidv210AnimeIllustDiffusion_aidv28': 'AID28',
         'Aidv210AnimeIllustDiffusion_aidv210': 'AID210',
         'hassakuXLSfwNsfwBeta_betaV01': 'HXLB01',
@@ -93,7 +99,7 @@ def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
     }.get(x, x)
 
 
-readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW70', 'SF1.0', 'SM10', 'novelai', 'RRM2.1', 'BPXL0.3.1', 'CFXL2.5'}
+readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW70', 'SF1.0', 'SM10', 'novelai', 'RRM3.2', 'KXLB7', 'CFXL2.5'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -170,6 +176,7 @@ def 导出单标签():
         f.write('# 模型对单标签-准确率: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
     目录 = orjson.loads(open('data/目录.json', encoding='utf-8').read())
+    目录['总体'] = {'name': '总体', 'keys': []}
     逆转目录 = {}
     mm = {}
     for k, v in 目录.items():
@@ -178,9 +185,9 @@ def 导出单标签():
     for (model, tag), (好, n) in m.items():
         if tag not in 满标签:
             continue
-        大 = 逆转目录[tag]
-        原好, 原n = mm.get((model, 大), (0, 0))
-        mm[model, 大] = 好 + 原好, n + 原n
+        for 大 in [逆转目录[tag], '总体']:
+            原好, 原n = mm.get((model, 大), (0, 0))
+            mm[model, 大] = 好 + 原好, n + 原n
     data = {}
     sorted_目录 = sorted(目录)
     for model in all_model:
@@ -242,21 +249,23 @@ def 导出单标签2():
     头发颜色 = ['blue_hair', 'red_hair', 'pink_hair', 'purple_hair', 'brown_hair', 'orange_hair', 'black_hair', 'blonde_hair', 'dark_blue_hair', 'light_purple_hair', 'light_brown_hair', 'white_hair', 'silver_hair', 'grey_hair', 'light_blue_hair', 'green_hair']
     q = {}
     for k, v in sorted(模型标签计数.items()):
-        for 种类, d in [('胸部', breasts), ('头发', hair)]:
+        for 种类, d in [('胸部大小', breasts), ('头发长度', hair)]:
             总个数 = 0
             总分数 = 0
             for h, hv in d.items():
                 总个数 += v.get(h, 0)
                 总分数 += v.get(h, 0) * hv
             q.setdefault(k, {}).setdefault(种类, 总分数/总个数)
-        q[k]['颜色'] = max([(v.get(x, 0), x) for x in 头发颜色])[1].removesuffix('_hair').replace('blonde', 'yellow')
+        q[k]['头发颜色'] = max([(v.get(x, 0), x) for x in 头发颜色])[1].removesuffix('_hair').replace('blonde', 'yellow')
+    with open('测试结果/模型偏好角色属性.md', 'w', encoding='utf8') as f:
+        f.write('# 模型偏好角色属性: \n\n<sub>\n\n' + pd.DataFrame(q).T.to_markdown() + '\n\n</sub>\n\n')
     from bokeh.plotting import figure, show
     from bokeh.models.annotations import Label
     模型 = [*模型标签计数]
-    x = [q[i]['胸部'] for i in 模型]
-    y = [q[i]['头发'] for i in 模型]
+    x = [q[i]['胸部大小'] for i in 模型]
+    y = [q[i]['头发长度'] for i in 模型]
     x, y = _分离(x, y, t=0.004)
-    color = [q[i]['颜色'] for i in 模型]
+    color = [q[i]['头发颜色'] for i in 模型]
     p = figure(title="散点图", x_axis_label="胸部大小", y_axis_label="头发长度", x_range = (min(x)-0.005, max(x)+0.01), width=1280, height=640)
     p.circle(x, y, size=10, color=color)
     for i in range(len(x)):

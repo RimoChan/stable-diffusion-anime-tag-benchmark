@@ -67,6 +67,7 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('rimochan_random_mix', 'blessed2.vae.safetensors'),
     ('rimochan_random_mix_1.1', 'blessed2.vae.safetensors'),
     ('rimochan_random_mix_2.1', 'blessed2.vae.safetensors'),
+    ('rimochan_random_mix_3.2', 'blessed2.vae.safetensors'),
     ('koji_v21', 'clearvae_v23.safetensors'),
     ('kaywaii_v50', 'clearvae_v23.safetensors'),
     ('kaywaii_v60', 'clearvae_v23.safetensors'),
@@ -81,6 +82,11 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
     ('superInvincibleAnd_v2', 'blessed2.vae.safetensors'),
     ('ApricotEyes_v10', 'blessed2.vae.safetensors'),
     ('Yorunohitsuji-v1.0', 'novelailatest-pruned.vae.pt'),
+    ('aiceKawaice_channel', 'blessed2.vae.safetensors'),
+    ('coharumix_v6', 'blessed2.vae.safetensors'),
+    ('irismix_v90', None),
+    ('yetanotheranimemodel_v20', 'blessed2.vae.safetensors'),
+    ('theWondermix_v12', 'blessed2.vae.safetensors'),
     ('animeIllustDiffusion_v052', 'sdxl_vae.safetensors'),
     ('animeIllustDiffusion_v061', 'sdxl_vae.safetensors'),
     ('CounterfeitXL-V1.0', None),
@@ -94,7 +100,6 @@ from common import 上网, ml_danbooru标签, safe_name, 服务器地址, check_
 ]
 
 sampler = 'DPM++ 2M Karras'
-seed = 1
 steps = 30
 width = 512
 height = 512
@@ -113,8 +118,8 @@ else:
     记录 = []
 
 
-def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True, extra_prompt=''):
-    rd = random.Random(0)
+def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True, extra_prompt='', seed=1, tags_seed=0, 计算相似度=True):
+    rd = random.Random(tags_seed)
     本地记录 = []
     iterator = range(n_iter)
     if use_tqdm:
@@ -158,17 +163,18 @@ def 评测模型(model, VAE, m, n_iter, use_tqdm=True, savedata=True, extra_prom
         n = len(图s)
         预测标签 = ml_danbooru标签([存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png') for i in range(n)])
 
-        相似度 = []
-        for a, b in itertools.pairwise([Image.open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png')) for i in range(n)]):
-            相似度.append(图像相似度(a, b))
-
         录 = {
             '分数': [[i.get(j, 0) for j in 标签组] for i in 预测标签.values()],
-            '相似度': 相似度,
             '总数': n,
             '标签组': 标签组,
             '参数': 参数,
         }
+        if 计算相似度:
+            相似度 = []
+            for a, b in itertools.pairwise([Image.open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png')) for i in range(n)]):
+                相似度.append(图像相似度(a, b))
+            录['相似度'] = 相似度
+
         本地记录.append(录)
         记录.append(录)
     if savedata:
