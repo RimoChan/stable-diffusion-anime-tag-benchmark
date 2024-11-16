@@ -12,15 +12,21 @@ from common import 模型数据, 要测的人
 Path('测试结果').mkdir(exist_ok=True)
 
 
-def _模型改名(x):    # 为了让表格在 GitHub 上显示更好看
-    return {i[0]: i[2] for i in 模型数据}.get(x, x)
+模型数据d = {i[0]: i for i in 模型数据}
+
+
+def 获取模型(x: str):
+    if t := 模型数据d.get(x):
+        return t
+    return [x, None, x, 'sd', False]
 
 
 def _is_XL(x):
     return {i[2]: i[3]=='sdxl' for i in 模型数据}.get(x, False)
 
+
 readme_mode = False
-readme要的 = {'A5Ink', 'AL', 'AOM3A1', 'BP10', 'CF3.0', 'CM4', 'CYS', 'KW70', 'SF1.0', 'CXL4.0', 'KXLB7', 'NAXL10', 'NAI3', 'FLUX1S'}
+readme要的 = {'anything-v4.5-pruned-fp32', 'AOM3A1', 'Counterfeit-V3.0_fp16', 'ConfusionXL5.0B', 'noobaiXLNAIXL_epsilonPred10Version', 'nai-diffusion-3'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -58,7 +64,7 @@ def 导出单标签():
         for d in orjson.loads(open(文件, 'rb').read()):
             sd_model_checkpoint = d['参数']['override_settings']['sd_model_checkpoint']
             assert sd_model_checkpoint in str(文件)
-            model = _模型改名(sd_model_checkpoint)
+            model = sd_model_checkpoint
             好 = len([i for i in d['分数'] if i > 0.1])
             n = len(d['分数'])
             assert (model, d['标签']) not in m
@@ -91,9 +97,11 @@ def 导出单标签():
             else:
                 好, n = t
                 data[model].append(好 / n)
+    if readme_mode:
+        data = {k: v for k, v in data.items() if k in readme要的}
     df = pd.DataFrame(data, index=好标签)
-    df.to_pickle('测试结果/模型对单标签-准确率.pkl')
-    with open('测试结果/模型对单标签-准确率.md', 'w', encoding='utf8') as f:
+    df.to_pickle(f'测试结果/模型对单标签-准确率{readme_mode or ""}.pkl')
+    with open(f'测试结果/模型对单标签-准确率{readme_mode or ""}.md', 'w', encoding='utf8') as f:
         f.write('# 模型对单标签-准确率: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
     目录 = orjson.loads(open('data/目录.json', encoding='utf-8').read())
@@ -128,7 +136,7 @@ def 导出单标签():
         if readme_mode:
             data = {k: v for k, v in data.items() if k in readme要的}
         pd.DataFrame(data, index=[目录.get(i, {}).get('name', i) for i in sorted_目录]).to_pickle(f'测试结果/{文件名}.pkl')
-        df = pd.DataFrame(_加粗(data, sorted_目录), index=[目录.get(i, {}).get('name', i) for i in sorted_目录])
+        df = pd.DataFrame(data, index=[目录.get(i, {}).get('name', i) for i in sorted_目录])
         with open(f'测试结果/{文件名}{readme_mode or ""}.md', 'w', encoding='utf8') as f:
             f.write(f'# {文件名}: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
@@ -138,7 +146,7 @@ def 导出单标签2():
     模型标签计数: dict[str, dict[str, int]] = {}
     for 文件 in tqdm([*Path('savedata').glob('单标签_*_记录.json')]):
         for d in orjson.loads(open(文件, 'rb').read()):
-            model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
+            model = d['参数']['override_settings']['sd_model_checkpoint']
             计 = 模型标签计数.setdefault(model, {})
             for v in d['预测标签'].values():
                 for kk, vv in v.items():
@@ -190,7 +198,7 @@ def 导出单标签2():
     y = [q[i]['头发长度'] for i in 模型]
     x, y = _分离(x, y, t=0.004)
     color = [q[i]['头发颜色'] for i in 模型]
-    p = figure(title="散点图", x_axis_label="胸部大小", y_axis_label="头发长度", x_range = (min(x)-0.005, max(x)+0.01), width=1440, height=720)
+    p = figure(title="散点图", x_axis_label="胸部大小", y_axis_label="头发长度", x_range = (min(x)-0.005, max(x)+0.03), width=1440, height=880)
     p.circle(x, y, size=10, color=color)
     for i in range(len(x)):
         label = Label(x=x[i]+0.0014, y=y[i]-0.0046, text=模型[i], text_font_size='9pt')
@@ -198,17 +206,14 @@ def 导出单标签2():
     save(p, '导出单标签2.html')
 
 
-
-def 导出多标签():
+def 导出多标签(width=512):
     m = {}
     for 文件 in tqdm([*Path('savedata').glob('多标签_*_记录.json')]):
         for d in orjson.loads(open(文件, 'rb').read()):
             n = len(d['标签组'])
-            if d['参数']['width'] != 512:
+            if d['参数']['width'] != width:
                 continue
-            model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
-            if '+' in model or model in ('rimo_random_mix_1', 'rimo_random_mix_2'):
-                continue
+            model = d['参数']['override_settings']['sd_model_checkpoint']
             m.setdefault((model, n), {'相似度': [], '分数': []})
             m[model, n]['相似度'].extend(d['相似度'])
             m[model, n]['分数'].extend(d['分数'])
@@ -237,15 +242,18 @@ def 导出多标签():
     if readme_mode:
         data = {k: v for k, v in data.items() if k in readme要的}
         data2 = {k: v for k, v in data2.items() if k in readme要的}
-    with open(f'测试结果/模型对标签个数-准确率和多样性{readme_mode or ""}.md', 'w', encoding='utf8') as f:
-        f.write('# 模型对标签个数-准确率: \n\n<sub>\n\n' + pd.DataFrame(_加粗(data, all_n), index=all_n).to_markdown() + '\n\n</sub>\n\n')
-        f.write('# 模型对标签个数-多样性: \n\n<sub>\n\n' + pd.DataFrame(_加粗(data2, all_n), index=all_n).to_markdown() + '\n\n</sub>\n\n')
+    with open(f'测试结果/模型对标签个数-准确率和多样性{readme_mode or ""}{str(width)*(width!=512)}.md', 'w', encoding='utf8') as f:
+        f.write('# 模型对标签个数-准确率: \n\n<sub>\n\n' + pd.DataFrame(data, index=all_n).to_markdown() + '\n\n</sub>\n\n')
+        f.write('# 模型对标签个数-多样性: \n\n<sub>\n\n' + pd.DataFrame(data2, index=all_n).to_markdown() + '\n\n</sub>\n\n')
 
     if not readme_mode:
         from bokeh.plotting import figure, save
         from bokeh.models.annotations import Label
-        x = [data[i][4] for i in all_model]
-        y = [data2[i][4] for i in all_model]
+        d03 = {i[0]: i[3] for i in 模型数据}
+        d04 = {i[0]: i[4] for i in 模型数据}
+        好all_model = [i for i in all_model if not d04.get(i)]
+        x = [data[i][all_n.index(32)] for i in 好all_model]
+        y = [data2[i][all_n.index(32)] for i in 好all_model]
         for i, v in enumerate(x):
             if v == '-':
                 x[i] = 0
@@ -253,28 +261,27 @@ def 导出多标签():
             if v == '-':
                 y[i] = 0
         x, y = _分离(x, y)
-        p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.01), width=1440, height=720)
+        p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.03), width=1440, height=880)
         color_map = {
             'sd': 'blue',
             'sdxl': 'red',
             'nai3': 'red',
             'flux.1s': 'green',
+            'flux.1d': 'green',
         }
-        d23 = {i[2]: i[3] for i in 模型数据}
-        color = [color_map[d23.get(i, 'sd')] for i in all_model]
+        color = [color_map[d03.get(i, 'sd')] for i in 好all_model]
         p.circle(x, y, size=10, color=color, alpha=0.5)
         for i in range(len(x)):
-            label = Label(x=x[i]+0.001, y=y[i]-0.0011, text=all_model[i], text_font_size='8pt')
+            label = Label(x=x[i]+0.0012, y=y[i]-0.0011, text=好all_model[i], text_font_size='8pt')
             p.add_layout(label)
-        save(p, '导出多标签.html')
-
+        save(p, f'导出多标签{str(width)*(width!=512)}.html')
 
 
 def 导出不同参数():
     l = orjson.loads(open('savedata/记录_不同参数.json', encoding='utf-8').read())
     d = {}
     for i in l:
-        model = _模型改名(i['参数']['override_settings']['sd_model_checkpoint'])
+        model = i['参数']['override_settings']['sd_model_checkpoint']
         参数 = i['参数']
         x = f'{参数["width"]}×{参数["height"]}'
         y = 参数['steps']
@@ -331,7 +338,7 @@ def 导出角色():
         for d in 记录:
             if d['人'].replace('_', ' ') not in 要测的人:
                 continue
-            model = _模型改名(d['参数']['override_settings']['sd_model_checkpoint'])
+            model = d['参数']['override_settings']['sd_model_checkpoint']
             m[d['人']] = np.mean([d['人'] in i for i in d['预测']])
         全m[model] = m
         z = {k: [0, 0] for k in sorted(作品名)}
@@ -352,33 +359,11 @@ def 导出角色():
         f.write(f'{df.to_markdown()}\n\n')
 
 
-def 导出clip_skip():
-    l = orjson.loads(open('savedata/记录_clip_skip.json', encoding='utf-8').read())
-    d = {}
-    for i in l:
-        model = _模型改名(i['参数']['override_settings']['sd_model_checkpoint'])
-        c = i['参数']['override_settings']['CLIP_stop_at_last_layers']
-        d.setdefault((model, c), []).extend(i['分数'])
-    dd = {}
-    for (model, c), 分数 in d.items(): 
-        a = np.array(分数)
-        acc = (a > 0.001).sum() / len(a.flatten())
-        dd.setdefault(model, {})[c] = acc
-    data = {}
-    for model in dd:
-        data[model] = []
-        for c in sorted(dd[model].keys()):
-            data[model].append(dd[model][c])
-    with open('测试结果/不同模型在不同clip_skip下的准确率.md', 'w', encoding='utf8') as f:
-        f.write('# 不同模型在不同clip_skip下的准确率: \n\n')
-        f.write(f'{pd.DataFrame(data, index=sorted(dd[model].keys())).to_markdown()}\n\n')
-
-
 def 导出lvis():
     d = {}
     for 文件 in tqdm([*Path('savedata').glob('lvis_*_记录.json')]):
         for dd in orjson.loads(open(文件, 'rb').read()):
-            model = _模型改名(dd['参数']['override_settings']['sd_model_checkpoint'])
+            model = dd['参数']['override_settings']['sd_model_checkpoint']
             n = len(dd['标签组'])
             分数 = []
             for names, scores in dd['检测结果']:
@@ -398,12 +383,13 @@ if __name__ == '__main__':
     导出单标签()
     导出单标签2()
     导出多标签()
+    导出多标签(768)
+    导出多标签(1024)
     导出角色()
-    导出不同参数()
     导出lvis()
 
     readme_mode = True
     导出单标签()
-    导出多标签()
+    导出多标签(768)
     导出角色()
     导出lvis()

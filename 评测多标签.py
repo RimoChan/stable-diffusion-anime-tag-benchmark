@@ -97,5 +97,7 @@ def 评测模型(model, VAE, m, n_iter, *, use_tqdm=True, savedata=True, extra_p
 
 
 if __name__ == '__main__':
-    for (model, VAE, 简称, model_type), (m, n_iter, size) in tqdm([*itertools.product(模型数据, ((2, 110, 512), (4, 100, 512), (8, 90, 512), (16, 80, 512), (32, 70, 512), (64, 60, 512), (128, 50, 512), (32, 70, 768)))]):
+    for (model, VAE, 简称, model_type, 弃用), (m, n_iter, size) in tqdm([*itertools.product(模型数据, ((2, 110, 768), (8, 90, 768), (32, 70, 768), (32, 70, 1024)))]):
+        if 弃用:
+            continue
         评测模型(model, VAE, m, n_iter, width=size, height=size, 图片缓存=True, model_type=model_type)

@@ -9,6 +9,7 @@ from backend_diffusers import txt2img
 
 
 存图文件夹 = Path('out_人')
+存图文件夹.mkdir(exist_ok=True)
 
 sampler = 'DPM++ 2M'
 scheduler = 'Karras'
@@ -75,5 +76,5 @@ def 评测模型(model, VAE, model_type) -> list[dict]:
     return 记录
 
 
-for model, VAE, 简称, model_type in tqdm(模型数据, ncols=70, desc='all'):
+for model, VAE, 简称, model_type, 弃用 in tqdm(模型数据, ncols=70, desc='all'):
     评测模型(model, VAE, model_type)
