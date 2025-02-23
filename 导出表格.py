@@ -26,7 +26,7 @@ def _is_XL(x):
 
 
 readme_mode = False
-readme要的 = {'anything-v4.5-pruned-fp32', 'AOM3A1', 'Counterfeit-V3.0_fp16', 'ConfusionXL5.0B', 'noobaiXLNAIXL_epsilonPred10Version', 'nai-diffusion-3'}
+readme要的 = {'anything-v4.5-pruned-fp32', 'AOM3A1', 'Counterfeit-V3.0_fp16', 'ConfusionXL5.0B', 'noobaiXLNAIXL_epsilonPred10Version', 'nai-diffusion-3', 'waiNSFWIllustrious_v110'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -261,7 +261,7 @@ def 导出多标签(width=512):
             if v == '-':
                 y[i] = 0
         x, y = _分离(x, y)
-        p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.03), width=1440, height=880)
+        p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.033), width=1440, height=880)
         color_map = {
             'sd': 'blue',
             'sdxl': 'red',
@@ -272,7 +272,7 @@ def 导出多标签(width=512):
         color = [color_map[d03.get(i, 'sd')] for i in 好all_model]
         p.circle(x, y, size=10, color=color, alpha=0.5)
         for i in range(len(x)):
-            label = Label(x=x[i]+0.0012, y=y[i]-0.0011, text=好all_model[i], text_font_size='8pt')
+            label = Label(x=x[i]+0.0014, y=y[i]-0.0011, text=好all_model[i], text_font_size='8pt')
             p.add_layout(label)
         save(p, f'导出多标签{str(width)*(width!=512)}.html')
 
