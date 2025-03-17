@@ -78,5 +78,7 @@ def 评测模型(model, VAE, model_type) -> list[dict]:
     return 记录
 
 
-for model, VAE, 简称, model_type in tqdm(模型数据, ncols=70, desc='all'):
+for model, VAE, 简称, model_type, 弃用 in tqdm(模型数据, ncols=70, desc='all'):
+    if 弃用:
+        continue
     评测模型(model, VAE, model_type)
