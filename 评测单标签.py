@@ -13,16 +13,14 @@ sampler = 'DPM++ 2M'
 scheduler = 'Karras'
 seed = 1
 steps = 30
-width = 512
-height = 512
 cfg_scale = 7
 
 存图文件夹 = Path('out')
 存图文件夹.mkdir(exist_ok=True)
 
 
-def 评测模型(model, VAE, model_type) -> list[dict]:
-    存档文件名 = f'savedata/单标签_{model}_记录.json'
+def 评测模型(model, VAE, model_type, width, height) -> list[dict]:
+    存档文件名 = f'savedata/单标签_{model}_{width}_记录.json'
     if Path(存档文件名).exists():
         with open(存档文件名, 'r', encoding='utf8') as f:
             记录 = orjson.loads(f.read())
@@ -81,4 +79,8 @@ def 评测模型(model, VAE, model_type) -> list[dict]:
 for model, VAE, 简称, model_type, 弃用 in tqdm(模型数据, ncols=70, desc='all'):
     if 弃用:
         continue
-    评测模型(model, VAE, model_type)
+    if model_type == 'sd':
+        size = 512
+    else:
+        size = 768
+    评测模型(model, VAE, model_type, width=size, height=size)

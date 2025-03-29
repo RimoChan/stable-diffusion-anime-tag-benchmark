@@ -56,12 +56,14 @@ def _分离(x: list[float], y: list[float], t=0.002, iter=3):
     return x, y
 
 
-def 导出单标签():
+def 导出单标签(width=512):
     m = {}
     all_model = set()
     all_tag = set()
     for 文件 in tqdm([*Path('savedata').glob('单标签_*_记录.json')]):
         for d in orjson.loads(open(文件, 'rb').read()):
+            if d['参数']['width'] != width:
+                continue
             sd_model_checkpoint = d['参数']['override_settings']['sd_model_checkpoint']
             assert sd_model_checkpoint in str(文件)
             model = sd_model_checkpoint
@@ -133,7 +135,7 @@ def 导出单标签():
             data = {k: v for k, v in data.items() if k in readme要的}
         pd.DataFrame(data, index=[目录.get(i, {}).get('name', i) for i in sorted_目录]).to_pickle(f'测试结果/{文件名}.pkl')
         df = pd.DataFrame(data, index=[目录.get(i, {}).get('name', i) for i in sorted_目录])
-        with open(f'测试结果/{文件名}{readme_mode or ""}.md', 'w', encoding='utf8') as f:
+        with open(f'测试结果/{文件名}{width}{readme_mode or ""}.md', 'w', encoding='utf8') as f:
             f.write(f'# {文件名}: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
 
@@ -376,7 +378,8 @@ def 导出lvis():
 
 
 if __name__ == '__main__':
-    导出单标签()
+    导出单标签(512)
+    导出单标签(768)
     导出单标签2()
     导出多标签()
     导出多标签(768)
