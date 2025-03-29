@@ -26,7 +26,7 @@ def _is_XL(x):
 
 
 readme_mode = False
-readme要的 = {'anything-v4.5-pruned-fp32', 'AOM3A1', 'Counterfeit-V3.0_fp16', 'ConfusionXL5.0B', 'noobaiXLNAIXL_epsilonPred10Version', 'nai-diffusion-3', 'waiNSFWIllustrious_v110'}
+readme要的 = {'animagineXL40_v4Opt', 'illustriousXL10_v10', 'ConfusionXL5.0B', 'noobaiXLNAIXL_epsilonPred10Version', 'nai-diffusion-3', 'waiNSFWIllustrious_v120'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -388,7 +388,8 @@ if __name__ == '__main__':
     导出lvis()
 
     readme_mode = True
-    导出单标签()
+    导出单标签(512)
+    导出单标签(768)
     导出多标签(768)
     导出角色()
     导出lvis()
