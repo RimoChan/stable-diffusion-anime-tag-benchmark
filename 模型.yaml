@@ -1,0 +1,458 @@
+aiceKawaice_channel:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+Aidv210AnimeIllustDiffusion_aidv210:
+  类型: sd
+  vae: vae-ft-mse-840000-ema-pruned.safetensors
+Aidv210AnimeIllustDiffusion_aidv28:
+  类型: sd
+  vae: vae-ft-mse-840000-ema-pruned.safetensors
+  隐藏: true
+anyloraCheckpoint_novaeFp16:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+anything-v4.5-pruned-fp32:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+anythingV3_fp16:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+AnythingV5Ink_ink:
+  类型: sd
+  隐藏: true
+aoaokoPVCStyleModel_pvcAOAOKO:
+  类型: sd
+  vae: novelailatest-pruned.vae.safetensors
+  隐藏: true
+AOM3A1:
+  类型: sd
+  vae: orangemix.vae.safetensors
+AOM3A2:
+  类型: sd
+  vae: orangemix.vae.safetensors
+  隐藏: true
+ApricotEyes_v10:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+bluePencil_v10:
+  类型: sd
+  vae: clearvae_v23.safetensors
+bluePencil_v9:
+  类型: sd
+  vae: clearvae_v23.safetensors
+  隐藏: true
+calicomix_v75:
+  类型: sd
+cetusMix_cetusVersion2:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+  隐藏: true
+cetusMix_cetusVersion3:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+  隐藏: true
+cetusMix_Coda2:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+  隐藏: true
+cetusMix_v4:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+cetusMix_Whalefall2:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+  隐藏: true
+cocotifacute_v20:
+  类型: sd
+  vae: novelailatest-pruned.vae.safetensors
+  隐藏: true
+coharumix_v6:
+  类型: sd
+  vae: blessed2.vae.safetensors
+cosplaymix_v20:
+  类型: sd
+Counterfeit-V2.2:
+  类型: sd
+  vae: Counterfeit-V2.5.vae.safetensors
+  隐藏: true
+Counterfeit-V2.5_pruned:
+  类型: sd
+  vae: Counterfeit-V2.5.vae.safetensors
+  隐藏: true
+Counterfeit-V3.0_fp16:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+counterfeitV30_20:
+  类型: sd
+  vae: Counterfeit-V2.5.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_echodimension:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_kemiao:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_kemiaomiao:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_midchapter:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_midchapter2:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_midchapter3:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_naiV3style:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_neochapter:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_neochapter2:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_neochapter3:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+  隐藏: true
+cuteyukimixAdorable_specialchapter:
+  类型: sd
+  vae: anything-v4.0.vae.safetensors
+darkSushiMixMix_225D:
+  类型: sd
+  vae: vae-ft-mse-840000-ema-pruned.safetensors
+divineelegancemix_V9:
+  类型: sd
+  vae: MoistMix.vae.safetensors
+etherBluMix_etherBluMix5:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+ghostmix_v20Bakedvae:
+  类型: sd
+himawarimix_v100:
+  类型: sd
+irismix_v90:
+  类型: sd
+  隐藏: true
+jitq_v20:
+  类型: sd
+  vae: blessed2.vae.safetensors
+jitq_v30:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+kaywaii_v50:
+  类型: sd
+  vae: clearvae_v23.safetensors
+  隐藏: true
+kaywaii_v60:
+  类型: sd
+  vae: clearvae_v23.safetensors
+  隐藏: true
+kaywaii_v70:
+  类型: sd
+  vae: clearvae_v23.safetensors
+  隐藏: true
+kaywaii_v80:
+  类型: sd
+  vae: clearvae_v23.safetensors
+  隐藏: true
+kaywaii_v85:
+  类型: sd
+  vae: clearvae_v23.safetensors
+  隐藏: true
+kaywaii_v90:
+  类型: sd
+  vae: clearvae_v23.safetensors
+koji_v21:
+  类型: sd
+  vae: clearvae_v23.safetensors
+meinamix_meinaV11:
+  类型: sd
+mixProV4_v4:
+  类型: sd
+  vae: novelailatest-pruned.vae.safetensors
+novelailatest-pruned:
+  类型: sd
+  vae: novelailatest-pruned.vae.safetensors
+pastelMixStylizedAnime_pastelMixPrunedFP16:
+  类型: sd
+  vae: kl-f8-anime2.safetensors
+perfectWorld_v2Baked:
+  类型: sd
+  隐藏: true
+perfectWorld_v6Baked:
+  类型: sd
+petitcutie_v15:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+petitcutie_v20:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+PVCStyleModelMovable_v20NoVae:
+  类型: sd
+  vae: vae-ft-mse-840000-ema-pruned.safetensors
+PVCStyleModelMovable_v30:
+  类型: sd
+  vae: vae-ft-mse-840000-ema-pruned.safetensors
+  隐藏: true
+rabbit_v7:
+  类型: sd
+  vae: novelailatest-pruned.vae.safetensors
+  隐藏: true
+rainbowsweets_v20:
+  类型: sd
+rimochan_random_mix:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+rimochan_random_mix_1.1:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+rimochan_random_mix_2.1:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+rimochan_random_mix_3.2:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+rimochan_random_mix_4.0:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+rimochan_random_mix_4.1:
+  类型: sd
+  vae: blessed2.vae.safetensors
+sakuramochimix_v10:
+  类型: sd
+  vae: novelailatest-pruned.vae.safetensors
+superInvincibleAnd_v2:
+  类型: sd
+  vae: blessed2.vae.safetensors
+sweetfruit_melon.safetensors_v1.0:
+  类型: sd
+  vae: vae-ft-mse-840000-ema-pruned.safetensors
+sweetMix_v22Flat:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+theWondermix_v12:
+  类型: sd
+  vae: blessed2.vae.safetensors
+yetanotheranimemodel_v20:
+  类型: sd
+  vae: blessed2.vae.safetensors
+  隐藏: true
+aingdiffusionXL_v06:
+  类型: sdxl
+  隐藏: true
+aingdiffusionXL_v11:
+  类型: sdxl
+aniease_v24:
+  类型: sdxl
+animagineXL40_v4Opt:
+  类型: sdxl
+animagineXLV3_v30:
+  类型: sdxl
+animeIllustDiffusion_v052:
+  类型: sdxl
+  vae: sdxl_vae.safetensors
+animeIllustDiffusion_v061:
+  类型: sdxl
+  vae: sdxl_vae.safetensors
+  隐藏: true
+blue_pencil-XL-v0.3.1:
+  类型: sdxl
+  隐藏: true
+bluePencilXL_v200:
+  类型: sdxl
+  隐藏: true
+bluePencilXL_v600:
+  类型: sdxl
+ConfusionXL1.0:
+  类型: sdxl
+  vae: sdxl_vae_0.9.safetensors
+  隐藏: true
+ConfusionXL2.0:
+  类型: sdxl
+  vae: sdxl_vae_0.9.safetensors
+  隐藏: true
+ConfusionXL3.0:
+  类型: sdxl
+  vae: sdxl_vae_0.9.safetensors
+  隐藏: true
+ConfusionXL4.0_fp16_vae:
+  类型: sdxl
+  隐藏: true
+ConfusionXL5.0:
+  类型: sdxl
+  vae: sdxl_vae_0.9.safetensors
+  隐藏: true
+ConfusionXL5.0B:
+  类型: sdxl
+  vae: sdxl_vae_0.9.safetensors
+CounterfeitXL-V1.0:
+  类型: sdxl
+  隐藏: true
+counterfeitxl_v20:
+  类型: sdxl
+  隐藏: true
+counterfeitxl_v25:
+  类型: sdxl
+cutecore_xl:
+  类型: sdxl
+hassakuXLHentai_v13:
+  类型: sdxl
+hassakuXLSfwNsfwBeta_betaV01:
+  类型: sdxl
+  隐藏: true
+himawarimix_xlV13:
+  类型: sdxl
+illumiyumeXL_v30:
+  类型: sdxl
+  隐藏: true
+illumiyumeXL_v35VPred:
+  类型: sdxl
+Illustrious-XL-v2.0:
+  类型: sdxl
+illustriousXL10_v10:
+  类型: sdxl
+illustriousXL_v01:
+  类型: sdxl
+kohakuXLBeta_beta7:
+  类型: sdxl
+  vae: sdxl_vae.safetensors
+kohakuXLDelta_rev1:
+  类型: sdxl
+  vae: sdxl_vae.safetensors
+  隐藏: true
+kohakuXLEpsilon_rev1:
+  类型: sdxl
+  vae: sdxl_vae.safetensors
+netaArtXL_v10:
+  类型: sdxl
+noobaiXL_CXyz_2:
+  类型: sdxl
+noobaiXL_XYZ:
+  类型: sdxl
+  隐藏: true
+noobaiXLNAIXL_earlyAccessVersion:
+  类型: sdxl
+  隐藏: true
+noobaiXLNAIXL_epsilonPred05Version:
+  类型: sdxl
+  隐藏: true
+noobaiXLNAIXL_epsilonPred075:
+  类型: sdxl
+  隐藏: true
+noobaiXLNAIXL_epsilonPred10Version:
+  类型: sdxl
+noobaiXLNAIXL_epsilonPred11Version:
+  类型: sdxl
+noobaiXLNAIXL_vPred05Version:
+  类型: sdxl
+  隐藏: true
+  额外参数:
+    cfg_scale: 5
+noobaiXLNAIXL_vPred06Version:
+  类型: sdxl
+  隐藏: true
+  额外参数:
+    cfg_scale: 5
+noobaiXLNAIXL_vPred10Version:
+  类型: sdxl
+  额外参数:
+    cfg_scale: 5
+obsessionIllustrious_vPredV20:
+  类型: sdxl
+pdForAnime_v20:
+  类型: sdxl
+ponyDiffusionV6XL_v6StartWithThisOne:
+  类型: sdxl
+PVCStyleModelFantasy_betaV10:
+  类型: sdxl
+  vae: sdxl_vae.safetensors
+  隐藏: true
+PVCStyleModelMovable_beta25Realistic:
+  类型: sdxl
+  隐藏: true
+PVCStyleModelMovable_nbxl10:
+  类型: sdxl
+PVCStyleModelMovable_pony160:
+  类型: sdxl
+  隐藏: true
+reproductionSDXL_2v12:
+  类型: sdxl
+sd_xl_base_1.0:
+  类型: sdxl
+  动漫: false
+thickCoatingStyle_pdxl10:
+  类型: sdxl
+  隐藏: true
+tPonynai3_v6:
+  类型: sdxl
+waiNSFWIllustrious_v100:
+  类型: sdxl
+  隐藏: true
+waiNSFWIllustrious_v110:
+  类型: sdxl
+waiNSFWIllustrious_v120:
+  类型: sdxl
+waiNSFWIllustrious_v130:
+  类型: sdxl
+waiNSFWIllustrious_v140:
+  类型: sdxl
+waiNSFWIllustrious_v150:
+  类型: sdxl
+waiNSFWIllustrious_v50:
+  类型: sdxl
+waiNSFWIllustrious_v60:
+  类型: sdxl
+  隐藏: true
+waiNSFWIllustrious_v70:
+  类型: sdxl
+  隐藏: true
+waiNSFWIllustrious_v80:
+  类型: sdxl
+  隐藏: true
+waiNSFWIllustrious_v90:
+  类型: sdxl
+  隐藏: true
+flux1-dev-fp8:
+  类型: flux.1d
+  动漫: False
+flux1-schnell-fp8:
+  类型: flux.1s
+  动漫: False
+  额外参数:
+    steps: 4
+nai-diffusion-3:
+  类型: nai3
+  隐藏: true
+Neta-Lumina-diffusers:
+  类型: neta-lumina
+  额外参数:
+    cfg_scale: 5
+sd3.5_medium:
+  类型: sd3
+  动漫: False
+  额外参数:
+    cfg_scale: 4.5

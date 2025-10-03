@@ -19,7 +19,7 @@ cfg_scale = 7
 存图文件夹.mkdir(exist_ok=True)
 
 
-def 评测模型(model, VAE, model_type, width, height) -> list[dict]:
+def 评测模型(model, VAE, model_type, width, height, 覆盖参数) -> list[dict]:
     存档文件名 = f'savedata/单标签_{model}_{width}_记录.json'
     if Path(存档文件名).exists():
         with open(存档文件名, 'r', encoding='utf8') as f:
@@ -47,16 +47,15 @@ def 评测模型(model, VAE, model_type, width, height) -> list[dict]:
         }
         skip = False
         for i in 记录:
-            if i['标签'] == 标签 and 参数相同(i['参数'], 参数):
-                skip = True
-                break
+            if i['标签'] == 标签:
+                if 参数相同(i['参数'], 参数):
+                    skip = True
+                    break
+                raise Exception(f'重复了！\n{i["参数"]}\n{参数}')
         if skip:
             continue
-        数量参数 = {
-            'batch_size': 4,
-            'n_iter': 4,
-        }
-        图s = txt2img(数量参数 | 参数)
+        数量参数 = {'n': 16}
+        图s = txt2img(数量参数 | 参数 | 覆盖参数)
         for i, b in enumerate(图s):
             with open(存图文件夹 / safe_name(f'{标签}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png'), 'wb') as f:
                 f.write(b)
@@ -76,11 +75,11 @@ def 评测模型(model, VAE, model_type, width, height) -> list[dict]:
     return 记录
 
 
-for model, VAE, 简称, model_type, 弃用 in tqdm(模型数据, ncols=70, desc='all'):
+for model, VAE, 简称, model_type, 弃用, 覆盖参数 in tqdm(模型数据, ncols=70, desc='all'):
     if 弃用:
         continue
     if model_type == 'sd':
         size = 512
     else:
         size = 768
-    评测模型(model, VAE, model_type, width=size, height=size)
+    评测模型(model, VAE, model_type, width=size, height=size, 覆盖参数=覆盖参数 or {})

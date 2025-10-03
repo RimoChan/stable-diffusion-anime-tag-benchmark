@@ -1,12 +1,14 @@
 import re
 import copy
 from pathlib import Path
+from collections import defaultdict
 
 import orjson
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from common import 模型数据, 要测的人
+from 模型 import 模型池
 
 
 Path('测试结果').mkdir(exist_ok=True)
@@ -40,6 +42,23 @@ def _加粗(data: dict[str, list], yy):
     return data
 
 
+def _模型标记颜色(k: str) -> str:
+    if k not in 模型池:
+        return 'blue'
+    color_map = {
+        'sd': 'blue',
+        'sdxl': 'red',
+        'nai3': 'red',
+        'sd3': 'green',
+        'flux.1s': 'green',
+        'flux.1d': 'green',
+        'neta-lumina': 'green',
+    }
+    if not 模型池[k].动漫:
+        return 'grey'
+    return color_map.get(模型池[k].类型, 'blue')
+
+
 def _分离(x: list[float], y: list[float], t=0.002, iter=3):
     x = copy.deepcopy(x)
     y = copy.deepcopy(y)
@@ -67,6 +86,8 @@ def 导出单标签(width=512):
             sd_model_checkpoint = d['参数']['override_settings']['sd_model_checkpoint']
             assert sd_model_checkpoint in str(文件)
             model = sd_model_checkpoint
+            if model not in 模型池:
+                continue
             好 = len([i for i in d['分数'] if i > 0.1])
             n = len(d['分数'])
             assert (model, d['标签']) not in m
@@ -109,6 +130,7 @@ def 导出单标签(width=512):
         for i in v['keys']:
             逆转目录[i.lower().replace(' ', '_')] = k
     超逆转目录 = {k: v.split('-')[0] for k, v in 逆转目录.items()}
+    翻译 = {'artistic': '艺术破格', 'human': '人物', 'humanities': '人文景观', 'image': '构图', 'natural': '自然', 'restricted': '限制级'}
     for 逆, 文件名 in [(逆转目录, '模型对标签类别-准确率'), (超逆转目录, '模型对标签大类-准确率')]:
         mm = {}
         for (model, tag), (好, n) in m.items():
@@ -127,16 +149,16 @@ def 导出单标签(width=512):
                     data[model].append('-')
                 else:
                     好, n = t
-                    if n <= 32:     # 不置信
-                        data[model].append('-')
-                    else:
-                        data[model].append(round(好 / n, 3))
+                    data[model].append(round(好 / n, 3))
         if readme_mode:
             data = {k: v for k, v in data.items() if k in readme要的}
-        pd.DataFrame(data, index=[目录.get(i, {}).get('name', i) for i in sorted_目录]).to_pickle(f'测试结果/{文件名}.pkl')
-        df = pd.DataFrame(data, index=[目录.get(i, {}).get('name', i) for i in sorted_目录])
+        中文目录 = [目录.get(i, {}).get('name', i) for i in sorted_目录]
+        中文目录 = [翻译.get(i, i) for i in 中文目录]
+        pd.DataFrame(data, index=中文目录).to_pickle(f'测试结果/{文件名}.pkl')
+        df = pd.DataFrame(data, index=中文目录)
+        df = df.loc[(df != 0).any(axis=1)]
         with open(f'测试结果/{文件名}{width}{readme_mode or ""}.md', 'w', encoding='utf8') as f:
-            f.write(f'# {文件名}: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
+            f.write(df.T.to_markdown())
 
 
 def 导出单标签2():
@@ -201,78 +223,52 @@ def 导出单标签2():
     for i in range(len(x)):
         label = Label(x=x[i]+0.0014, y=y[i]-0.0046, text=模型[i], text_font_size='9pt')
         p.add_layout(label)
-    save(p, '导出单标签2.html')
+    save(p, 'html/导出单标签2.html')
 
 
 def 导出多标签(width=512):
     m = {}
-    for 文件 in tqdm([*Path('savedata').glob('多标签_*_记录.json')]):
+    dd准确度 = defaultdict(dict)
+    dd多样性 = defaultdict(dict)
+    for 文件 in tqdm([*Path('savedata').glob('多标签_*_记录_v2.json')]):
         for d in orjson.loads(open(文件, 'rb').read()):
-            n = len(d['标签组'])
             if d['参数']['width'] != width:
                 continue
             model = d['参数']['override_settings']['sd_model_checkpoint']
+            if readme_mode and (model not in readme要的):
+                continue
+            n = len(d['标签组'])
             m.setdefault((model, n), {'相似度': [], '分数': []})
             m[model, n]['相似度'].extend(d['相似度'])
             m[model, n]['分数'].extend(d['分数'])
-    print(d['参数']['width'])
-    all_model, all_n = zip(*m.keys())
-    all_model = sorted({*all_model}, key=lambda x: x if _is_XL(x) else '0' + x)
-    all_n = sorted({*all_n})
-
-    data = {}
-    data2 = {}
-    d_shape = {}
-    for model in all_model:
-        data[model] = []
-        data2[model] = []
-        for n in all_n:
-            t = m.get((model, n))
-            if t is None:
-                data[model].append('-')
-                data2[model].append('-')
-            else:
-                a = np.array(m[model, n]['分数'])
-                assert d_shape.setdefault(a.shape[0], a.shape) == a.shape, f'{model}测试结果的形状{a.shape}不对！'
-                acc = (a > 0.001).sum() / len(a.flatten())
-                data[model].append(round(acc, 3))
-                data2[model].append(round(1 - np.array(m[model, n]['相似度']).mean(), 3))
-    if readme_mode:
-        data = {k: v for k, v in data.items() if k in readme要的}
-        data2 = {k: v for k, v in data2.items() if k in readme要的}
+    for (model, n), v in m.items():
+        a = np.array(v['分数'])
+        acc = (a > 0.001).sum() / len(a.flatten())
+        dd准确度[model][n] = round(acc, 3)
+        dd多样性[model][n] = round(1 - np.array(v['相似度']).mean(), 3)
+    dd准确度df = pd.DataFrame(dd准确度).T
+    dd多样性df = pd.DataFrame(dd多样性).T
     with open(f'测试结果/模型对标签个数-准确率和多样性{readme_mode or ""}{str(width)*(width!=512)}.md', 'w', encoding='utf8') as f:
-        f.write('# 模型对标签个数-准确率: \n\n<sub>\n\n' + pd.DataFrame(data, index=all_n).to_markdown() + '\n\n</sub>\n\n')
-        f.write('# 模型对标签个数-多样性: \n\n<sub>\n\n' + pd.DataFrame(data2, index=all_n).to_markdown() + '\n\n</sub>\n\n')
+        f.write('# 模型对标签个数-准确率: \n\n<sub>\n\n' + dd准确度df.fillna('-').to_markdown() + '\n\n</sub>\n\n')
+        f.write('# 模型对标签个数-多样性: \n\n<sub>\n\n' + dd多样性df.fillna('-').to_markdown() + '\n\n</sub>\n\n')
 
     if not readme_mode:
         from bokeh.plotting import figure, save
         from bokeh.models.annotations import Label
-        d03 = {i[0]: i[3] for i in 模型数据}
-        d04 = {i[0]: i[4] for i in 模型数据}
-        好all_model = [i for i in all_model if not d04.get(i)]
-        x = [data[i][all_n.index(32)] for i in 好all_model]
-        y = [data2[i][all_n.index(32)] for i in 好all_model]
-        for i, v in enumerate(x):
-            if v == '-':
-                x[i] = 0
-        for i, v in enumerate(y):
-            if v == '-':
-                y[i] = 0
-        x, y = _分离(x, y)
-        p = figure(title="散点图", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-0.005, max(x)+0.037), width=1440, height=880)
-        color_map = {
-            'sd': 'blue',
-            'sdxl': 'red',
-            'nai3': 'red',
-            'flux.1s': 'green',
-            'flux.1d': 'green',
-        }
-        color = [color_map[d03.get(i, 'sd')] for i in 好all_model]
-        p.circle(x, y, size=10, color=color, alpha=0.5)
-        for i in range(len(x)):
-            label = Label(x=x[i]+0.0016, y=y[i]-0.0011, text=好all_model[i], text_font_size='8pt')
-            p.add_layout(label)
-        save(p, f'导出多标签{str(width)*(width!=512)}.html')
+        for n in [32, 8]:
+            好all_model = [i for i in dd准确度 if i in 模型池 and dd准确度[i].get(n, '-') != '-']
+            x = [dd准确度[i][n] for i in 好all_model]
+            y = [dd多样性[i][n] for i in 好all_model]
+            if not x:
+                continue
+            dx = max(x)-min(x)
+            dy = max(y)-min(y)
+            p = figure(title=f"多标签散点图{n}×{width}", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-dx*0.01, max(x)+dx*0.12), width=1440, height=880, active_scroll="wheel_zoom")
+            p.circle(x, y, size=10, color=[_模型标记颜色(i) for i in 好all_model], alpha=0.5)
+            for i in range(len(x)):
+                label = Label(x=x[i]+dx*0.0045, y=y[i]-dy*0.007, text=好all_model[i], text_font_size='8pt')
+                p.add_layout(label)
+            save(p, f'html/多标签散点图{n}×{width}.html')
 
 
 def 导出不同参数():
@@ -338,6 +334,8 @@ def 导出角色():
                 continue
             model = d['参数']['override_settings']['sd_model_checkpoint']
             m[d['人']] = np.mean([d['人'] in i for i in d['预测']])
+        if model not in 模型池:
+            continue
         全m[model] = m
         z = {k: [0, 0] for k in sorted(作品名)}
         for 人 in m:
@@ -349,12 +347,16 @@ def 导出角色():
         data[model].append(f'{int(np.sum([*m.values()]))}/{len(m)}')
     if readme_mode:
         data = {k: v for k, v in sorted(data.items(), key=lambda x: x[0] if _is_XL(x[0]) else '0' + x[0]) if k in readme要的}
-    with open(f'测试结果/模型对不同作品的准确率{readme_mode or ""}.md', 'w', encoding='utf8') as f:
-        f.write(f'{pd.DataFrame(data, index=[作品名[k] for k in sorted(作品名)]+["总体"]).to_markdown()}\n\n')
+    with open(f'测试结果/模型对不同系列的准确率{readme_mode or ""}.md', 'w', encoding='utf8') as f:
+        f.write(f'{pd.DataFrame(data, index=[作品名[k] for k in sorted(作品名)]+["总体"]).T.to_markdown()}\n\n')
+    人名翻译 = orjson.loads(open("R:\stable-diffusion-anime-tag-benchmark\data\人名翻译.json", 'rb').read())
+    for k, d in [*全m.items()]:
+        新d = {人名翻译.get(k, k): v for k, v in d.items()}
+        全m[k] = 新d
     df = pd.DataFrame(全m)
     df.to_pickle('测试结果/模型对不同角色的准确率.pkl')
     with open('测试结果/模型对不同角色的准确率.md', 'w', encoding='utf8') as f:
-        f.write(f'{df.to_markdown()}\n\n')
+        f.write(f'{df.T.to_markdown()}\n\n')
 
 
 def 导出lvis():
@@ -381,9 +383,10 @@ if __name__ == '__main__':
     导出单标签(512)
     导出单标签(768)
     导出单标签2()
-    导出多标签()
+    导出多标签(512)
     导出多标签(768)
     导出多标签(1024)
+    导出多标签(1280)
     导出角色()
     导出lvis()
 

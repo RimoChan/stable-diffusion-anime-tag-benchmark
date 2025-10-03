@@ -4,8 +4,9 @@ from pathlib import Path
 import torch
 from transformers import T5EncoderModel
 from diffusers.models import AutoencoderKL
-from diffusers import StableDiffusionPipeline, StableDiffusionKDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionKDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline
 from compel import Compel, ReturnedEmbeddingsType
+from safetensors import safe_open
 from optimum.quanto import freeze, qfloat8, quantize
 
 import rimo_storage.cache
@@ -13,7 +14,11 @@ import rimo_storage.cache
 from DeepCache import DeepCacheSDHelper
 
 
-model_dir = 'R:/stable-diffusion-webui-master/models'
+model_dirs = [
+    'S:/Stable-diffusion-models',
+    'R:/stable-diffusion-webui-master/models',
+    'R:/models',
+]
 
 
 _l = torch.load
@@ -24,7 +29,7 @@ torch.load = _假load
 
 
 class 超StableDiffusionKDiffusionPipeline:
-    def __init__(self, path, vae_path=None):
+    def __init__(self, path, vae_path=None, 串行化vae=True):
         p = {}
         if vae_path:
             p['vae'] = AutoencoderKL.from_single_file(vae_path, torch_dtype=torch.float16, weights_only=False).to("cuda")
@@ -33,6 +38,8 @@ class 超StableDiffusionKDiffusionPipeline:
         c.pop('image_encoder')
         self._pipe = StableDiffusionKDiffusionPipeline(**c).to('cuda')
         self._pipe.set_scheduler('sample_dpmpp_2m')
+        if 串行化vae:
+            self._pipe.enable_vae_slicing()
         self._compel = Compel(tokenizer=self._pipe.tokenizer, text_encoder=self._pipe.text_encoder, truncate_long_prompts=False)
 
     def __call__(
@@ -56,13 +63,16 @@ class 超StableDiffusionXLPipeline:
         p = {}
         if vae_path:
             p['vae'] = AutoencoderKL.from_single_file(vae_path, torch_dtype=torch.float16, scaling_factor=0.13025).to("cuda")
-        dpmpp_2m = DPMSolverMultistepScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule='scaled_linear')
         self._pipe = StableDiffusionXLPipeline.from_single_file(
             path,
             torch_dtype=torch.float16,
-            scheduler=dpmpp_2m,
             **p,
         ).to("cuda")
+        if 'v_pred' in safe_open(path, framework='torch').keys():
+            self._pipe.scheduler = EulerDiscreteScheduler.from_config(self._pipe.scheduler.config, prediction_type='v_prediction', rescale_betas_zero_snr=True)
+        else:
+            self._pipe.scheduler = DPMSolverMultistepScheduler.from_config(self._pipe.scheduler.config)
+        self._pipe.set_progress_bar_config(disable=True)
         if 串行化vae:
             self._pipe.enable_vae_slicing()
         if 使用deepcache:
@@ -103,13 +113,15 @@ class 超StableDiffusionXLPipeline:
         )
 
 
-def find_file(s):
+def find_file(s) -> Path:
     if not s:
         return None
     s = s.removesuffix('.safetensors')
-    for i in [*Path(model_dir).glob('**/*.safetensors')] + [*Path(model_dir).glob('**/*.pt')] + [*Path(model_dir).glob('**/*.ckpt')]:
-        if i.stem == s or i.name == s:
-            return i
+    for base in model_dirs:
+        候选 = [*Path(base).glob('**/*.safetensors')] + [*Path(base).glob('**/*.pt')] + [*Path(base).glob('**/*.ckpt')] + [*Path(base).glob('**/*/')]
+        for i in 候选:
+            if i.stem == s or i.name == s:
+                return i
     raise Exception(f'找不到{s}！')
 
 
@@ -118,17 +130,32 @@ def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipelin
         return 超StableDiffusionKDiffusionPipeline(path, vae_path)
     elif model_type == 'sdxl':
         return 超StableDiffusionXLPipeline(path, vae_path)
-    elif model_type == 'flux.1s':
-        transformer = FluxTransformer2DModel.from_single_file(path, torch_dtype=torch.bfloat16)
+    elif model_type in ('flux.1s', 'flux.1d'):
+        if model_type == 'flux.1s':
+            repo = "black-forest-labs/FLUX.1-schnell"
+        elif model_type == 'flux.1d':
+            repo = "black-forest-labs/FLUX.1-dev"
+        transformer = FluxTransformer2DModel.from_single_file(path, torch_dtype=torch.bfloat16).to('cuda')
         quantize(transformer, weights=qfloat8)
         freeze(transformer)
-        text_encoder_2 = T5EncoderModel.from_pretrained("black-forest-labs/FLUX.1-schnell", subfolder="text_encoder_2", torch_dtype=torch.bfloat16)
+        text_encoder_2 = T5EncoderModel.from_pretrained(repo, subfolder="text_encoder_2", torch_dtype=torch.bfloat16).to('cuda')
         quantize(text_encoder_2, weights=qfloat8)
         freeze(text_encoder_2)
-        pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-schnell", transformer=None, text_encoder_2=None, torch_dtype=torch.bfloat16)
+        pipe = FluxPipeline.from_pretrained(repo, transformer=None, text_encoder_2=None, torch_dtype=torch.bfloat16)
+        pipe.set_progress_bar_config(disable=True)
         pipe.transformer = transformer
         pipe.text_encoder_2 = text_encoder_2
+        pipe.vae.enable_slicing()
         pipe = pipe.to('cuda')
+        return pipe
+    elif model_type == 'sd3':
+        model = SD3Transformer2DModel.from_single_file(path, torch_dtype=torch.bfloat16).to('cuda')
+        pipe = StableDiffusion3Pipeline.from_pretrained('stabilityai/stable-diffusion-3.5-medium', transformer=model, torch_dtype=torch.bfloat16).to('cuda')
+        pipe.set_progress_bar_config(disable=True)
+        return pipe
+    elif model_type == 'neta-lumina':
+        pipe = Lumina2Pipeline.from_pretrained(path, torch_dtype=torch.bfloat16).to('cuda')
+        pipe.set_progress_bar_config(disable=True)
         return pipe
     else:
         raise Exception(f'不认识模型类型{model_type}！')
@@ -186,28 +213,39 @@ def _txt2img(p: dict) -> list[bytes]:
 
     override_settings = p.pop('override_settings', None)
 
-    batch_size = p.pop('batch_size')
+    assert 'batch_size' not in p and 'n_iter' not in p, 'batch_size和n_iter废弃了，传n'
+    n = p.pop('n')
+    if model_type in ('sdxl', 'sd'):
+        batch_size = 4
+    else:
+        batch_size = 1
+    assert n % batch_size == 0
+    n_iter = n // batch_size
+
+    if model_type == 'neta-lumina':
+        参数['prompt'] = 'You are an assistant designed to generate anime images based on textual prompts. <Prompt Start> ' + 参数['prompt']
+        参数['negative_prompt'] = 'You are an assistant designed to generate anime images based on textual prompts. <Prompt Start> ' + 参数['negative_prompt']
+
     参数['prompt'] = [参数['prompt']] * batch_size
     参数['negative_prompt'] = [参数['negative_prompt']] * batch_size
-    n_iter = p.pop('n_iter')
     seed = p.pop('seed')
 
     assert not p, f'剩下参数{p}不知道怎么转换……'
 
     pipe = get_pipeline(model_type, override_settings['sd_model_checkpoint'], override_settings['sd_vae'], override_settings.get('lora'))
 
-    if model_type == 'flux.1s':
+    if model_type in ('flux.1s', 'flux.1d', 'sd3'):
         参数.pop('negative_prompt')
         参数.pop('use_karras_sigmas')
-        参数['num_inference_steps'] = 4
-
+    if model_type == 'neta-lumina':
+        参数.pop('use_karras_sigmas')
     res = []
     for i in range(n_iter):
         res.extend(pipe(
             **参数,
             generator=[torch.Generator(device='cuda').manual_seed(j) for j in range(seed + batch_size*i, seed + batch_size*(i+1))],
         ).images)
-    torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
     res_b = []
     for image in res:
         b = io.BytesIO()

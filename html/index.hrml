@@ -1,0 +1,26 @@
+head:
+    title:
+        SD Anime Benchmark
+    #meta http-equiv='refresh' content='1';
+    script src='https://unpkg.com/vue@3/dist/vue.global.js':
+    script src='1.js':
+    style:
+        a {cursor: pointer; color: blue; text-decoration: none;}
+body style='margin: 0px;':
+    div#app:
+        header style='padding: 10px; border-bottom: 1px solid #777;':
+            a v-for='file of 所有文件' @click='设置当前文件(file)' style='margin-right: 15px;':
+                {{ file.replace('.html', '') }}
+            a href='https://github.com/RimoChan/stable-diffusion-anime-tag-benchmark' target='_blank' style='float: right;':
+                GitHub
+        iframe :src='当前文件' style='width:100%;height:900px;border:none;' v-bind:style="{height: 当前文件.includes('图') ? '900px' : 'Calc(100vh - 80px)'}":
+        template v-if='当前文件.includes("图")':
+            p style='margin:16px;' v-if='当前文件.includes("图")':
+                【提示】
+                ul:
+                    li:
+                        按住鼠标左键可以移动镜头，滚鼠标滚轮可以缩放。
+                    li:
+                        红色: SDXL模型，蓝色: SD1.5模型，绿色: 其他模型，灰色: 不是动漫模型(来凑数的)。
+                    li:
+                        横轴是准确度，纵轴是多样性，越靠近右上角说明模型越好。

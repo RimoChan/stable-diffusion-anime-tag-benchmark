@@ -1,5 +1,12 @@
 __pycache__
-_rimocache_缓存上网_pickle
-_rimocache__txt2img_缓存_pickle
+_rimocache_*
 Thumbs.db
 *.cmd
+backup
+out*
+savedata*
+data
+*.pkl
+*.html
+*.dll
+*True*.md
