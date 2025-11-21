@@ -319,6 +319,10 @@ counterfeitxl_v25:
   类型: sdxl
 cutecore_xl:
   类型: sdxl
+hassakuXLIllustrious_v32:
+  类型: sdxl
+hassakuXLIllustrious_v22:
+  类型: sdxl
 hassakuXLHentai_v13:
   类型: sdxl
 hassakuXLSfwNsfwBeta_betaV01:
@@ -348,6 +352,18 @@ kohakuXLEpsilon_rev1:
   类型: sdxl
   vae: sdxl_vae.safetensors
 netaArtXL_v10:
+  类型: sdxl
+novaAnimeXL_ilV130:
+  类型: sdxl
+novaAnimeXL_ilV120:
+  类型: sdxl
+novaAnimeXL_ilV110:
+  类型: sdxl
+  隐藏: true
+novaAnimeXL_ilV100:
+  类型: sdxl
+  隐藏: true
+novaAnimeXL_ilV90:
   类型: sdxl
 noobaiXL_CXyz_2:
   类型: sdxl
@@ -381,6 +397,8 @@ noobaiXLNAIXL_vPred10Version:
   类型: sdxl
   额外参数:
     cfg_scale: 5
+oneObsession_v18:
+  类型: sdxl
 obsessionIllustrious_vPredV20:
   类型: sdxl
 pdForAnime_v20:

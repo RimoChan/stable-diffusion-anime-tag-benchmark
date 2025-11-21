@@ -7,6 +7,6 @@ out*
 savedata*
 data
 *.pkl
-*.html
 *.dll
 *True*.md
+bokeh_plot*.png

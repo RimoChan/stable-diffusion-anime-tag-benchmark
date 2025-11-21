@@ -6,7 +6,8 @@ from pathlib import Path
 import orjson
 from tqdm import tqdm
 
-from common import ml_danbooru标签, safe_name, 要测的标签, 参数相同, 模型数据
+from 模型 import 模型池
+from common import ml_danbooru标签, safe_name, 要测的标签, 参数相同
 from backend_diffusers import txt2img
 
 sampler = 'DPM++ 2M'
@@ -75,11 +76,9 @@ def 评测模型(model, VAE, model_type, width, height, 覆盖参数) -> list[di
     return 记录
 
 
-for model, VAE, 简称, model_type, 弃用, 覆盖参数 in tqdm(模型数据, ncols=70, desc='all'):
-    if 弃用:
-        continue
-    if model_type == 'sd':
+for model in tqdm(模型池.values()):
+    if model.类型 == 'sd':
         size = 512
     else:
         size = 768
-    评测模型(model, VAE, model_type, width=size, height=size, 覆盖参数=覆盖参数 or {})
+    评测模型(model.名字, model.vae, model.类型, width=size, height=size, 覆盖参数=model.额外参数 or {})

@@ -7,24 +7,11 @@ import orjson
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from common import 模型数据, 要测的人
+from common import 要测的人
 from 模型 import 模型池
 
 
 Path('测试结果').mkdir(exist_ok=True)
-
-
-模型数据d = {i[0]: i for i in 模型数据}
-
-
-def 获取模型(x: str):
-    if t := 模型数据d.get(x):
-        return t
-    return [x, None, x, 'sd', False]
-
-
-def _is_XL(x):
-    return {i[2]: i[3]=='sdxl' for i in 模型数据}.get(x, False)
 
 
 readme_mode = False
@@ -94,17 +81,17 @@ def 导出单标签(width=512):
             m[model, d['标签']] = 好, n
             all_model.add(model)
             all_tag.add(d['标签'])
-    all_model = sorted(all_model, key=lambda x: x if _is_XL(x) else '0' + x)
-    all_tag = sorted(all_tag)
 
-    满标签 = []     # 全部不为None
+    all_model = sorted(all_model, key=lambda x: ([*模型池.keys()]+[x]).index(x))
+    all_tag = sorted(all_tag)
+    assert len(all_tag) == 1500
+
     好标签 = sorted(all_tag)
     for tag in 好标签:
-        for model in all_model:
+        for model in [*all_model]:
             if m.get((model, tag)) is None:
+                all_model.remove(model)
                 break
-        else:
-            满标签.append(tag)
 
     data = {}
     for model in all_model:
@@ -134,7 +121,7 @@ def 导出单标签(width=512):
     for 逆, 文件名 in [(逆转目录, '模型对标签类别-准确率'), (超逆转目录, '模型对标签大类-准确率')]:
         mm = {}
         for (model, tag), (好, n) in m.items():
-            if tag not in 满标签:
+            if tag not in 好标签:
                 continue
             for 大 in [逆[tag], '总体']:
                 原好, 原n = mm.get((model, 大), (0, 0))
@@ -349,7 +336,8 @@ def 导出角色():
         data = {k: v for k, v in sorted(data.items(), key=lambda x: x[0] if _is_XL(x[0]) else '0' + x[0]) if k in readme要的}
     with open(f'测试结果/模型对不同系列的准确率{readme_mode or ""}.md', 'w', encoding='utf8') as f:
         f.write(f'{pd.DataFrame(data, index=[作品名[k] for k in sorted(作品名)]+["总体"]).T.to_markdown()}\n\n')
-    人名翻译 = orjson.loads(open("R:\stable-diffusion-anime-tag-benchmark\data\人名翻译.json", 'rb').read())
+    pd.DataFrame(全m).to_pickle('测试结果/模型对不同角色的准确率raw.pkl')
+    人名翻译 = orjson.loads(open("./data/人名翻译.json", 'rb').read())
     for k, d in [*全m.items()]:
         新d = {人名翻译.get(k, k): v for k, v in d.items()}
         全m[k] = 新d
@@ -387,12 +375,5 @@ if __name__ == '__main__':
     导出多标签(768)
     导出多标签(1024)
     导出多标签(1280)
-    导出角色()
-    导出lvis()
-
-    readme_mode = True
-    导出单标签(512)
-    导出单标签(768)
-    导出多标签(768)
     导出角色()
     导出lvis()
