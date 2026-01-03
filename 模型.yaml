@@ -397,6 +397,10 @@ noobaiXLNAIXL_vPred10Version:
   类型: sdxl
   额外参数:
     cfg_scale: 5
+chenkinNoobXL_v01:
+  类型: sdxl
+chenkinNoobXLCKXL_v02:
+  类型: sdxl
 oneObsession_v18:
   类型: sdxl
 obsessionIllustrious_vPredV20:
@@ -427,18 +431,26 @@ thickCoatingStyle_pdxl10:
   隐藏: true
 tPonynai3_v6:
   类型: sdxl
+waiSHUFFLENOOB_vPred04:
+  类型: sdxl
+  额外参数:
+    cfg_scale: 5
 waiNSFWIllustrious_v100:
   类型: sdxl
   隐藏: true
 waiNSFWIllustrious_v110:
   类型: sdxl
+  隐藏: true
 waiNSFWIllustrious_v120:
   类型: sdxl
+  隐藏: true
 waiNSFWIllustrious_v130:
   类型: sdxl
 waiNSFWIllustrious_v140:
   类型: sdxl
 waiNSFWIllustrious_v150:
+  类型: sdxl
+waiIllustriousSDXL_v160:
   类型: sdxl
 waiNSFWIllustrious_v50:
   类型: sdxl
@@ -469,6 +481,16 @@ Neta-Lumina-diffusers:
   类型: neta-lumina
   额外参数:
     cfg_scale: 5
+Sana_1600M_1024px_diffusers:
+  类型: sana
+  动漫: False
+  额外参数:
+    cfg_scale: 4.5
+Sana_600M_512px_diffusers:
+  类型: sana
+  动漫: False
+  额外参数:
+    cfg_scale: 4.5
 sd3.5_medium:
   类型: sd3
   动漫: False

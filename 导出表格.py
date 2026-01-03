@@ -1,5 +1,6 @@
 import re
 import copy
+import subprocess
 from pathlib import Path
 from collections import defaultdict
 
@@ -13,9 +14,6 @@ from 模型 import 模型池
 
 Path('测试结果').mkdir(exist_ok=True)
 
-
-readme_mode = False
-readme要的 = {'animagineXL40_v4Opt', 'illustriousXL10_v10', 'ConfusionXL5.0B', 'noobaiXLNAIXL_epsilonPred10Version', 'nai-diffusion-3', 'waiNSFWIllustrious_v120'}
 
 
 def _加粗(data: dict[str, list], yy):
@@ -103,11 +101,9 @@ def 导出单标签(width=512):
             else:
                 好, n = t
                 data[model].append(好 / n)
-    if readme_mode:
-        data = {k: v for k, v in data.items() if k in readme要的}
     df = pd.DataFrame(data, index=好标签)
-    df.to_pickle(f'测试结果/模型对单标签-准确率{readme_mode or ""}.pkl')
-    with open(f'测试结果/模型对单标签-准确率{readme_mode or ""}.md', 'w', encoding='utf8') as f:
+    df.to_pickle(f'测试结果/模型对单标签-准确率.pkl')
+    with open(f'测试结果/模型对单标签-准确率.md', 'w', encoding='utf8') as f:
         f.write('# 模型对单标签-准确率: \n\n<sub>\n\n' + df.to_markdown() + '\n\n</sub>\n\n')
 
     目录 = orjson.loads(open('data/目录.json', encoding='utf-8').read())
@@ -137,14 +133,12 @@ def 导出单标签(width=512):
                 else:
                     好, n = t
                     data[model].append(round(好 / n, 3))
-        if readme_mode:
-            data = {k: v for k, v in data.items() if k in readme要的}
         中文目录 = [目录.get(i, {}).get('name', i) for i in sorted_目录]
         中文目录 = [翻译.get(i, i) for i in 中文目录]
         pd.DataFrame(data, index=中文目录).to_pickle(f'测试结果/{文件名}.pkl')
         df = pd.DataFrame(data, index=中文目录)
         df = df.loc[(df != 0).any(axis=1)]
-        with open(f'测试结果/{文件名}{width}{readme_mode or ""}.md', 'w', encoding='utf8') as f:
+        with open(f'测试结果/{文件名}{width}.md', 'w', encoding='utf8') as f:
             f.write(df.T.to_markdown())
 
 
@@ -222,7 +216,7 @@ def 导出多标签(width=512):
             if d['参数']['width'] != width:
                 continue
             model = d['参数']['override_settings']['sd_model_checkpoint']
-            if readme_mode and (model not in readme要的):
+            if model not in 模型池:
                 continue
             n = len(d['标签组'])
             m.setdefault((model, n), {'相似度': [], '分数': []})
@@ -235,27 +229,26 @@ def 导出多标签(width=512):
         dd多样性[model][n] = round(1 - np.array(v['相似度']).mean(), 3)
     dd准确度df = pd.DataFrame(dd准确度).T
     dd多样性df = pd.DataFrame(dd多样性).T
-    with open(f'测试结果/模型对标签个数-准确率和多样性{readme_mode or ""}{str(width)*(width!=512)}.md', 'w', encoding='utf8') as f:
+    with open(f'测试结果/模型对标签个数-准确率和多样性{str(width)*(width!=512)}.md', 'w', encoding='utf8') as f:
         f.write('# 模型对标签个数-准确率: \n\n<sub>\n\n' + dd准确度df.fillna('-').to_markdown() + '\n\n</sub>\n\n')
         f.write('# 模型对标签个数-多样性: \n\n<sub>\n\n' + dd多样性df.fillna('-').to_markdown() + '\n\n</sub>\n\n')
 
-    if not readme_mode:
-        from bokeh.plotting import figure, save
-        from bokeh.models.annotations import Label
-        for n in [32, 8]:
-            好all_model = [i for i in dd准确度 if i in 模型池 and dd准确度[i].get(n, '-') != '-']
-            x = [dd准确度[i][n] for i in 好all_model]
-            y = [dd多样性[i][n] for i in 好all_model]
-            if not x:
-                continue
-            dx = max(x)-min(x)
-            dy = max(y)-min(y)
-            p = figure(title=f"多标签散点图{n}×{width}", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-dx*0.01, max(x)+dx*0.12), width=1440, height=880, active_scroll="wheel_zoom")
-            p.circle(x, y, size=10, color=[_模型标记颜色(i) for i in 好all_model], alpha=0.5)
-            for i in range(len(x)):
-                label = Label(x=x[i]+dx*0.0045, y=y[i]-dy*0.007, text=好all_model[i], text_font_size='8pt')
-                p.add_layout(label)
-            save(p, f'html/多标签散点图{n}×{width}.html')
+    from bokeh.plotting import figure, save
+    from bokeh.models.annotations import Label
+    for n in [32, 8]:
+        好all_model = [i for i in dd准确度 if i in 模型池 and dd准确度[i].get(n, '-') != '-']
+        x = [dd准确度[i][n] for i in 好all_model]
+        y = [dd多样性[i][n] for i in 好all_model]
+        if not x:
+            continue
+        dx = max(x)-min(x)
+        dy = max(y)-min(y)
+        p = figure(title=f"多标签散点图{n}×{width}", x_axis_label="准确度", y_axis_label="多样性", x_range = (min(x)-dx*0.01, max(x)+dx*0.12), width=1440, height=880, active_scroll="wheel_zoom")
+        p.circle(x, y, size=10, color=[_模型标记颜色(i) for i in 好all_model], alpha=0.5)
+        for i in range(len(x)):
+            label = Label(x=x[i]+dx*0.0045, y=y[i]-dy*0.007, text=好all_model[i], text_font_size='8pt')
+            p.add_layout(label)
+        save(p, f'html/多标签散点图{n}×{width}.html')
 
 
 def 导出不同参数():
@@ -332,9 +325,7 @@ def 导出角色():
                 z[作品][1] += 1
         data[model] = [f'{int(z[k][0])}/{z[k][1]}' for k in sorted(作品名)]
         data[model].append(f'{int(np.sum([*m.values()]))}/{len(m)}')
-    if readme_mode:
-        data = {k: v for k, v in sorted(data.items(), key=lambda x: x[0] if _is_XL(x[0]) else '0' + x[0]) if k in readme要的}
-    with open(f'测试结果/模型对不同系列的准确率{readme_mode or ""}.md', 'w', encoding='utf8') as f:
+    with open(f'测试结果/模型对不同系列的准确率.md', 'w', encoding='utf8') as f:
         f.write(f'{pd.DataFrame(data, index=[作品名[k] for k in sorted(作品名)]+["总体"]).T.to_markdown()}\n\n')
     pd.DataFrame(全m).to_pickle('测试结果/模型对不同角色的准确率raw.pkl')
     人名翻译 = orjson.loads(open("./data/人名翻译.json", 'rb').read())
@@ -361,9 +352,7 @@ def 导出lvis():
                 分数.append(len(set(names))/n)
             d.setdefault(model, []).extend(分数)
     data = {model: sum(z)/len(z) for model, z in d.items()}
-    if readme_mode:
-        data = {k: v for k, v in data.items() if k in readme要的}
-    with open(f'测试结果/不同模型在lvis下的准确率{readme_mode or ""}.md', 'w', encoding='utf8') as f:
+    with open(f'测试结果/不同模型在lvis下的准确率.md', 'w', encoding='utf8') as f:
         f.write(f'{pd.DataFrame(data, index=["score"]).to_markdown()}\n\n')
 
 
@@ -376,4 +365,5 @@ if __name__ == '__main__':
     导出多标签(1024)
     导出多标签(1280)
     导出角色()
-    导出lvis()
+    # 导出lvis()
+    subprocess.run(['python', 'R:/stable-diffusion-anime-tag-benchmark/html/转html.py'], check=True)

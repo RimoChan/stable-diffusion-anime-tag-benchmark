@@ -8,7 +8,7 @@ from PIL import Image
 from tqdm import tqdm
 
 from 模型 import 模型池
-from common import ml_danbooru标签, safe_name, 图像相似度, 要测的标签, 参数相同, 图像质量, 模型数据
+from common import ml_danbooru标签, safe_name, 图像相似度, 要测的标签, 参数相同
 
 sampler = 'DPM++ 2M'
 scheduler = 'Karras'
@@ -19,7 +19,9 @@ cfg_scale = 7
 存图文件夹.mkdir(exist_ok=True)
 
 
-def 评测模型(model, VAE, m, n_iter, *, use_tqdm=True, savedata=True, extra_prompt='', tags_seed=0, 计算相似度=True, width=512, height=512, 图片缓存=False,  计算图像质量=True, model_type, 覆盖参数):
+def 评测模型(model, VAE, m, n_iter, *, use_tqdm=True, savedata=True, extra_prompt='', tags_seed=0, 计算相似度=True, width=512, height=512, 图片缓存=False, model_type, 覆盖参数):
+    from backend_diffusers import txt2img
+
     存档文件名 = f'savedata/多标签_{model}_{width}_记录_v2.json'
     if Path(存档文件名).exists():
         with open(存档文件名, 'r', encoding='utf8') as f:
@@ -60,7 +62,6 @@ def 评测模型(model, VAE, m, n_iter, *, use_tqdm=True, savedata=True, extra_p
             本地记录.append(i)
             continue
         数量参数 = {'n': 4}
-        from backend_diffusers import txt2img
         图s = txt2img(数量参数 | 参数 | 覆盖参数, 缓存=图片缓存)
         md5 = hashlib.md5(str(标签组).encode()).hexdigest()
         for i, b in enumerate(图s):
@@ -77,9 +78,6 @@ def 评测模型(model, VAE, m, n_iter, *, use_tqdm=True, savedata=True, extra_p
             '参数': 参数,
             '预测标签': {str(k): v for k, v in 预测标签.items()},
         }
-        if 计算图像质量:
-            质量 = 图像质量([Image.open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png')) for i in range(n)])
-            录['质量'] = 质量
         if 计算相似度:
             相似度 = []
             for a, b in itertools.pairwise([Image.open(存图文件夹 / safe_name(f'{md5}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png')) for i in range(n)]):
@@ -96,7 +94,7 @@ def 评测模型(model, VAE, m, n_iter, *, use_tqdm=True, savedata=True, extra_p
 
 if __name__ == '__main__':
     for model in tqdm(模型池.values()):
-        if model.类型 in ('sdxl', 'flux.1s', 'flux.1d', 'sd3', 'neta-lumina'):
+        if model.类型 in ('sdxl', 'flux.1s', 'flux.1d', 'sd3', 'neta-lumina', 'sana'):
             测试组合 = [(8, 100, 1024), (32, 100, 768), (32, 100, 1024), (32, 25, 1280)]
         elif model.类型 in ('sd', ):
             测试组合 = [(8, 100, 512), (32, 100, 512), (32, 100, 768)]

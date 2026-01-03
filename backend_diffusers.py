@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from transformers import T5EncoderModel
 from diffusers.models import AutoencoderKL
-from diffusers import StableDiffusionPipeline, StableDiffusionKDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionKDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline, SanaPipeline
 from compel import Compel, ReturnedEmbeddingsType
 from safetensors import safe_open
 from optimum.quanto import freeze, qfloat8, quantize
@@ -13,11 +13,16 @@ import rimo_storage.cache
 
 from DeepCache import DeepCacheSDHelper
 
+torch._dynamo.config.cache_size_limit = 64
 
 model_dirs = [
     'S:/Stable-diffusion-models',
     'R:/stable-diffusion-webui-master/models',
     'R:/models',
+    'X:/stable-diffusion-webui-master/models',
+    'X:/models',
+    'C:/Users/Administrator/Desktop/WAI-illustrious-1.5',
+    'Z:/models/Diffusion',
 ]
 
 
@@ -68,7 +73,8 @@ class 超StableDiffusionXLPipeline:
             torch_dtype=torch.float16,
             **p,
         ).to("cuda")
-        if 'v_pred' in safe_open(path, framework='torch').keys():
+        _keys = safe_open(path, framework='torch').keys()
+        if 'v_pred' in _keys:
             self._pipe.scheduler = EulerDiscreteScheduler.from_config(self._pipe.scheduler.config, prediction_type='v_prediction', rescale_betas_zero_snr=True)
         else:
             self._pipe.scheduler = DPMSolverMultistepScheduler.from_config(self._pipe.scheduler.config)
@@ -117,12 +123,15 @@ def find_file(s) -> Path:
     if not s:
         return None
     s = s.removesuffix('.safetensors')
+    a = []
     for base in model_dirs:
         候选 = [*Path(base).glob('**/*.safetensors')] + [*Path(base).glob('**/*.pt')] + [*Path(base).glob('**/*.ckpt')] + [*Path(base).glob('**/*/')]
         for i in 候选:
             if i.stem == s or i.name == s:
-                return i
-    raise Exception(f'找不到{s}！')
+                a.append(i)
+    if not a:
+        raise Exception(f'找不到{s}！')
+    return a[0]
 
 
 def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipeline | 超StableDiffusionXLPipeline | FluxPipeline:
@@ -155,6 +164,13 @@ def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipelin
         return pipe
     elif model_type == 'neta-lumina':
         pipe = Lumina2Pipeline.from_pretrained(path, torch_dtype=torch.bfloat16).to('cuda')
+        pipe.set_progress_bar_config(disable=True)
+        return pipe
+    elif model_type == 'sana':
+        pipe = SanaPipeline.from_pretrained(path, variant="fp16", torch_dtype=torch.float16)
+        pipe.to("cuda")
+        pipe.vae.to(torch.bfloat16)
+        pipe.text_encoder.to(torch.bfloat16)
         pipe.set_progress_bar_config(disable=True)
         return pipe
     else:
@@ -234,7 +250,7 @@ def _txt2img(p: dict) -> list[bytes]:
 
     pipe = get_pipeline(model_type, override_settings['sd_model_checkpoint'], override_settings['sd_vae'], override_settings.get('lora'))
 
-    if model_type in ('flux.1s', 'flux.1d', 'sd3'):
+    if model_type in ('flux.1s', 'flux.1d', 'sd3', 'sana'):
         参数.pop('negative_prompt')
         参数.pop('use_karras_sigmas')
     if model_type == 'neta-lumina':
