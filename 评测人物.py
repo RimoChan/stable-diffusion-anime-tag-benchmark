@@ -21,7 +21,7 @@ height = 768
 cfg_scale = 7
 
 
-def 评测模型(model, VAE, model_type) -> list[dict]:
+def 评测模型(model, VAE, model_type, 覆盖参数) -> list[dict]:
     存档文件名 = f'savedata/人物_{model}_记录.json'
     if Path(存档文件名).exists():
         with open(存档文件名, 'r', encoding='utf8') as f:
@@ -55,7 +55,7 @@ def 评测模型(model, VAE, model_type) -> list[dict]:
         if skip:
             continue
         数量参数 = {'n': 8}
-        图s = txt2img(数量参数 | 参数)
+        图s = txt2img(数量参数 | 参数 | 覆盖参数)
         for i, b in enumerate(图s):
             with open(存图文件夹 / safe_name(f'{人}-{i}@{model}×{VAE}@{width}×{height}@{steps}×{sampler}.png'), 'wb') as f:
                 f.write(b)
@@ -75,4 +75,4 @@ def 评测模型(model, VAE, model_type) -> list[dict]:
 
 
 for model in tqdm(模型池.values(), ncols=70, desc='all'):
-    评测模型(model.名字, model.vae, model.类型)
+    评测模型(model.名字, model.vae, model.类型, model.额外参数 or {})

@@ -491,6 +491,17 @@ Sana_600M_512px_diffusers:
   动漫: False
   额外参数:
     cfg_scale: 4.5
+Z-Image-Turbo:
+  类型: z-image
+  动漫: False
+  额外参数:
+    cfg_scale: 0
+    steps: 9
+Z-Image:
+  类型: z-image
+  动漫: False
+  额外参数:
+    cfg_scale: 4
 sd3.5_medium:
   类型: sd3
   动漫: False

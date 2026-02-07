@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from transformers import T5EncoderModel
 from diffusers.models import AutoencoderKL
-from diffusers import StableDiffusionPipeline, StableDiffusionKDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline, SanaPipeline
+from diffusers import StableDiffusionPipeline, StableDiffusionKDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline, SanaPipeline, ZImagePipeline
 from compel import Compel, ReturnedEmbeddingsType
 from safetensors import safe_open
 from optimum.quanto import freeze, qfloat8, quantize
@@ -173,6 +173,11 @@ def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipelin
         pipe.text_encoder.to(torch.bfloat16)
         pipe.set_progress_bar_config(disable=True)
         return pipe
+    elif model_type == 'z-image':
+        pipe = ZImagePipeline.from_pretrained(path, torch_dtype=torch.bfloat16)
+        pipe.to("cuda")
+        # pipe.set_progress_bar_config(disable=True)
+        return pipe
     else:
         raise Exception(f'不认识模型类型{model_type}！')
 
@@ -250,7 +255,7 @@ def _txt2img(p: dict) -> list[bytes]:
 
     pipe = get_pipeline(model_type, override_settings['sd_model_checkpoint'], override_settings['sd_vae'], override_settings.get('lora'))
 
-    if model_type in ('flux.1s', 'flux.1d', 'sd3', 'sana'):
+    if model_type in ('flux.1s', 'flux.1d', 'sd3', 'sana', 'z-image'):
         参数.pop('negative_prompt')
         参数.pop('use_karras_sigmas')
     if model_type == 'neta-lumina':
