@@ -46,6 +46,7 @@ bluePencil_v9:
   隐藏: true
 calicomix_v75:
   类型: sd
+  隐藏: true
 cetusMix_cetusVersion2:
   类型: sd
   vae: kl-f8-anime2.safetensors
@@ -197,6 +198,8 @@ perfectWorld_v2Baked:
   隐藏: true
 perfectWorld_v6Baked:
   类型: sd
+prefectIllustriousXL_v70:
+  类型: sdxl
 petitcutie_v15:
   类型: sd
   vae: blessed2.vae.safetensors
@@ -319,10 +322,14 @@ counterfeitxl_v25:
   类型: sdxl
 cutecore_xl:
   类型: sdxl
+hassakuXLIllustrious_v34:
+  类型: sdxl
+  隐藏: true
 hassakuXLIllustrious_v32:
   类型: sdxl
 hassakuXLIllustrious_v22:
   类型: sdxl
+  隐藏: true
 hassakuXLHentai_v13:
   类型: sdxl
 hassakuXLSfwNsfwBeta_betaV01:
@@ -353,6 +360,11 @@ kohakuXLEpsilon_rev1:
   vae: sdxl_vae.safetensors
 netaArtXL_v10:
   类型: sdxl
+novaAnimeXL_ilV170:
+  类型: sdxl
+  隐藏: true
+novaAnimeXL_ilV160:
+  类型: sdxl
 novaAnimeXL_ilV130:
   类型: sdxl
 novaAnimeXL_ilV120:
@@ -367,6 +379,7 @@ novaAnimeXL_ilV90:
   类型: sdxl
 noobaiXL_CXyz_2:
   类型: sdxl
+  隐藏: true
 noobaiXL_XYZ:
   类型: sdxl
   隐藏: true
@@ -399,10 +412,20 @@ noobaiXLNAIXL_vPred10Version:
     cfg_scale: 5
 chenkinNoobXL_v01:
   类型: sdxl
+  隐藏: true
 chenkinNoobXLCKXL_v02:
+  类型: sdxl
+chenkinNoobXLCKXL_v05:
+  类型: sdxl
+oneObsession_v19Atypical:
+  类型: sdxl
+oneObsession_v20Bold:
   类型: sdxl
 oneObsession_v18:
   类型: sdxl
+oneObsession_17RED:
+  类型: sdxl
+  隐藏: true
 obsessionIllustrious_vPredV20:
   类型: sdxl
 pdForAnime_v20:
@@ -418,6 +441,7 @@ PVCStyleModelMovable_beta25Realistic:
   隐藏: true
 PVCStyleModelMovable_nbxl10:
   类型: sdxl
+  隐藏: true
 PVCStyleModelMovable_pony160:
   类型: sdxl
   隐藏: true
@@ -448,6 +472,7 @@ waiNSFWIllustrious_v130:
   类型: sdxl
 waiNSFWIllustrious_v140:
   类型: sdxl
+  隐藏: true
 waiNSFWIllustrious_v150:
   类型: sdxl
 waiIllustriousSDXL_v160:
@@ -481,6 +506,12 @@ Neta-Lumina-diffusers:
   类型: neta-lumina
   额外参数:
     cfg_scale: 5
+NetaYume-Lumina-Image-2.0-Diffusers-v40:
+  类型: neta-lumina
+  额外参数:
+    cfg_scale: 5
+    cfg_trunc_ratio: 6
+    cfg_normalization: False
 Sana_1600M_1024px_diffusers:
   类型: sana
   动漫: False
@@ -491,6 +522,12 @@ Sana_600M_512px_diffusers:
   动漫: False
   额外参数:
     cfg_scale: 4.5
+FLUX.2-klein-4B:
+  类型: flux2klein
+  动漫: False
+  额外参数:
+    cfg_scale: 1
+    steps: 4
 Z-Image-Turbo:
   类型: z-image
   动漫: False
