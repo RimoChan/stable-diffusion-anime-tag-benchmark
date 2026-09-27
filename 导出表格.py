@@ -38,6 +38,7 @@ def _模型标记颜色(k: str) -> str:
         'flux.1s': 'green',
         'flux.1d': 'green',
         'neta-lumina': 'green',
+        'anima': 'purple',
     }
     if not 模型池[k].动漫:
         return 'grey'
@@ -88,6 +89,7 @@ def 导出单标签(width=512):
     for tag in 好标签:
         for model in [*all_model]:
             if m.get((model, tag)) is None:
+                print(f'{model}标签数量不够，不参加统计({tag})。')
                 all_model.remove(model)
                 break
 
@@ -119,7 +121,7 @@ def 导出单标签(width=512):
         for (model, tag), (好, n) in m.items():
             if tag not in 好标签:
                 continue
-            for 大 in [逆[tag], '总体']:
+            for 大 in [逆.get(tag, '其他'), '总体']:
                 原好, 原n = mm.get((model, 大), (0, 0))
                 mm[model, 大] = 好 + 原好, n + 原n
         data = {}
@@ -356,6 +358,23 @@ def 导出lvis():
         f.write(f'{pd.DataFrame(data, index=["score"]).to_markdown()}\n\n')
 
 
+def 导出多人():
+    m = {}
+    for 文件 in [*Path('savedata').glob('多人_*_记录.json')]:
+        with open(文件, 'r', encoding='utf8') as f:
+            记录 = orjson.loads(f.read())
+        model = 记录[0]['参数']['override_settings']['sd_model_checkpoint']
+        n = len(记录[0]['多人'])
+        m.setdefault(model, {}).setdefault(n, [])
+        for i in 记录:
+            for d in i['预测']:
+                分数 = len(set(i['多人']) & set(d)) / len(i['多人'])
+                m[model][n].append(分数)
+        m[model][n] = sum(m[model][n]) / len(m[model][n])
+    for k, v in m.items():
+        print(k, v)
+
+
 if __name__ == '__main__':
     导出单标签(512)
     导出单标签(768)
@@ -365,5 +384,6 @@ if __name__ == '__main__':
     导出多标签(1024)
     导出多标签(1280)
     导出角色()
+    导出多人()
     # 导出lvis()
     subprocess.run(['python', 'R:/stable-diffusion-anime-tag-benchmark/html/转html.py'], check=True)

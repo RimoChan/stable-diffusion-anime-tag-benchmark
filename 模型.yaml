@@ -522,6 +522,14 @@ Sana_600M_512px_diffusers:
   动漫: False
   额外参数:
     cfg_scale: 4.5
+RUM-FLUX.2-klein-4B:
+  类型: rum-flux2klein
+  动漫: True
+  额外参数:
+    cfg_scale: 5
+Anima-Base-v1.0-Diffusers:
+  类型: anima
+  动漫: True
 FLUX.2-klein-4B:
   类型: flux2klein
   动漫: False
