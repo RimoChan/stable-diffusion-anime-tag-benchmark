@@ -527,6 +527,17 @@ RUM-FLUX.2-klein-4B:
   动漫: True
   额外参数:
     cfg_scale: 5
+Krea-2-Turbo:
+  类型: krea2
+  动漫: False
+  额外参数:
+    cfg_scale: 0.0
+    steps: 8
+Krea-2-Raw:
+  类型: krea2
+  动漫: False
+  额外参数:
+    cfg_scale: 3.5
 Anima-Base-v1.0-Diffusers:
   类型: anima
   动漫: True

@@ -4,9 +4,11 @@ from pathlib import Path
 import torch
 from transformers import T5EncoderModel
 from diffusers.models import AutoencoderKL
-from diffusers import StableDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline, SanaPipeline, ZImagePipeline, Flux2KleinPipeline
+from diffusers import StableDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline, SanaPipeline, ZImagePipeline, Flux2KleinPipeline, AnimaAutoBlocks, Krea2Pipeline
+from diffusers.guiders import ClassifierFreeGuidance
 from compel import Compel, ReturnedEmbeddingsType
 from safetensors import safe_open
+from safetensors.torch import load_file
 from optimum.quanto import freeze, qfloat8, quantize
 
 import rimo_storage.cache
@@ -152,7 +154,6 @@ def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipelin
         quantize(text_encoder_2, weights=qfloat8)
         freeze(text_encoder_2)
         pipe = FluxPipeline.from_pretrained(repo, transformer=None, text_encoder_2=None, torch_dtype=torch.bfloat16)
-        pipe.set_progress_bar_config(disable=True)
         pipe.transformer = transformer
         pipe.text_encoder_2 = text_encoder_2
         pipe.vae.enable_slicing()
@@ -161,28 +162,66 @@ def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipelin
     elif model_type == 'sd3':
         model = SD3Transformer2DModel.from_single_file(path, torch_dtype=torch.bfloat16).to('cuda')
         pipe = StableDiffusion3Pipeline.from_pretrained('stabilityai/stable-diffusion-3.5-medium', transformer=model, torch_dtype=torch.bfloat16).to('cuda')
-        pipe.set_progress_bar_config(disable=True)
         return pipe
     elif model_type == 'neta-lumina':
         pipe = Lumina2Pipeline.from_pretrained(path, torch_dtype=torch.bfloat16).to('cuda')
-        pipe.set_progress_bar_config(disable=True)
         return pipe
     elif model_type == 'sana':
         pipe = SanaPipeline.from_pretrained(path, variant="fp16", torch_dtype=torch.float16)
         pipe.to("cuda")
         pipe.vae.to(torch.bfloat16)
         pipe.text_encoder.to(torch.bfloat16)
-        pipe.set_progress_bar_config(disable=True)
         return pipe
     elif model_type == 'z-image':
         pipe = ZImagePipeline.from_pretrained(path, torch_dtype=torch.bfloat16)
         pipe.to("cuda")
-        pipe.set_progress_bar_config(disable=True)
         return pipe
     elif model_type == 'flux2klein':
         pipe = Flux2KleinPipeline.from_pretrained(path, torch_dtype=torch.bfloat16)
-        pipe.set_progress_bar_config(disable=True)
         pipe.to("cuda")
+        return pipe
+    elif model_type == 'rum-flux2klein':
+        import torch.nn.functional as F
+        class 哭Pipeline(Flux2KleinPipeline):
+            def 上床(self, prompt):
+                prompt_embeds, _ = self.encode_prompt(
+                    prompt=prompt,
+                    max_sequence_length=200,
+                    text_encoder_out_layers=[10, 20, 30],
+                )
+                sdxl_prompt_embeds, *_ = self.教师pipeline.encode_prompt(prompt)
+                return torch.cat([prompt_embeds, F.pad(sdxl_prompt_embeds.to('cuda'), (0, 7680 - 2048))], dim=1).to(torch.bfloat16)
+
+            @torch.inference_mode()
+            def __call__(self, *, prompt, **kwargs):
+                return super().__call__(prompt_embeds=self.上床(prompt), negative_prompt_embeds=self.上床(''), **kwargs)
+        import sys
+        sys.path.append('R:/RUM')
+        from 哭 import 哭model
+        原 = "R:/models/Diffusion/FLUX.2-klein-base-4B"
+        sdxl = find_file("waiNSFWIllustrious_v140.safetensors")
+        新 = "R:/models/RUM-FLUX.2-klein-4B/RUM-FLUX.2-klein-4B.safetensors"
+        transformer = 哭model.from_pretrained(原, subfolder="transformer")
+        state_dict = load_file(新, device='cuda')
+        transformer.load_state_dict(state_dict, assign=True)
+        pipe = 哭Pipeline.from_pretrained(原, transformer=transformer, torch_dtype=torch.bfloat16)
+        pipe.to('cuda')
+        pipe.教师pipeline = StableDiffusionXLPipeline.from_single_file(sdxl, torch_dtype=torch.float16)
+        return pipe
+    elif model_type == 'anima':
+        pipe = AnimaAutoBlocks().init_pipeline(path)
+        pipe.load_components(torch_dtype=torch.bfloat16)
+        pipe.update_components(guider=ClassifierFreeGuidance(guidance_scale=4.0))
+        pipe.to("cuda")
+        return pipe
+    elif model_type == 'krea2':
+        pipe = Krea2Pipeline.from_pretrained(path, torch_dtype=torch.bfloat16)
+        pipe.enable_group_offload(
+            onload_device=torch.device("cuda"),
+            offload_type="leaf_level",
+            use_stream=True,
+            exclude_modules=["transformer", "vae"]
+        )
         return pipe
     else:
         raise Exception(f'不认识模型类型{model_type}！')
@@ -190,6 +229,8 @@ def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipelin
 
 def pipeline(model_type, path, vae_path, lora_path) -> 超StableDiffusionKDiffusionPipeline | 超StableDiffusionXLPipeline | FluxPipeline:
     p = pipeline0(model_type, path, vae_path)
+    if hasattr(p, 'set_progress_bar_config'):
+        p.set_progress_bar_config(disable=True)
     if lora_path:
         print(lora_path)
         p._pipe.load_lora_weights(lora_path, adapter_name="Q")
@@ -205,7 +246,10 @@ def get_pipeline(model_type, model, vae, lora):
     if _loaded_pipeline and _loaded_pipeline[1] == (model_type, model, vae, lora):
         return _loaded_pipeline[0]
     torch.cuda.empty_cache()
-    _loaded_pipeline = pipeline(model_type, find_file(model), find_file(vae), find_file(lora)), (model_type, model, vae, lora)
+    if model_type == 'rum-flux2klein':
+        _loaded_pipeline = pipeline(model_type, '', None, None), (model_type, model, vae, lora)
+    else:
+        _loaded_pipeline = pipeline(model_type, find_file(model), find_file(vae), find_file(lora)), (model_type, model, vae, lora)
     torch.cuda.empty_cache()
     return _loaded_pipeline[0]
 
@@ -244,6 +288,8 @@ def _txt2img(p: dict) -> list[bytes]:
     n = p.pop('n')
     if model_type in ('sdxl', 'sd'):
         batch_size = 4
+    elif model_type in ('rum-flux2klein',):
+        batch_size = 2
     else:
         batch_size = 1
     assert n % batch_size == 0
@@ -265,11 +311,13 @@ def _txt2img(p: dict) -> list[bytes]:
 
     pipe = get_pipeline(model_type, override_settings['sd_model_checkpoint'], override_settings['sd_vae'], override_settings.get('lora'))
 
-    if model_type in ('flux.1s', 'flux.1d', 'sd3', 'sana', 'z-image', 'flux2klein'):
+    if model_type in ('flux.1s', 'flux.1d', 'sd3', 'sana', 'z-image', 'flux2klein', 'rum-flux2klein', 'krea2'):
         参数.pop('negative_prompt')
         参数.pop('use_karras_sigmas')
     if model_type == 'neta-lumina':
         参数.pop('use_karras_sigmas')
+    if model_type == 'anima':
+        参数.pop('guidance_scale')
     res = []
     for i in range(n_iter):
         res.extend(pipe(

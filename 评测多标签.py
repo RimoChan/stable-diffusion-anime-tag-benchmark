@@ -96,6 +96,8 @@ if __name__ == '__main__':
     for model in tqdm(模型池.values()):
         if model.类型 in ('sdxl', 'flux.1s', 'flux.1d', 'sd3', 'neta-lumina', 'sana', 'z-image', 'flux2klein', 'anima', 'rum-flux2klein',):
             测试组合 = [(8, 100, 1024), (32, 100, 768), (32, 100, 1024), (32, 25, 1280)]
+        elif model.类型 in ('krea2', ):
+            测试组合 = [(8, 100, 1024), (32, 100, 768), (32, 100, 1024)]
         elif model.类型 in ('sd', ):
             测试组合 = [(8, 100, 512), (32, 100, 512), (32, 100, 768)]
         else:
