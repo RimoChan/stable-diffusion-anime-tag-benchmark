@@ -538,6 +538,12 @@ Krea-2-Raw:
   动漫: False
   额外参数:
     cfg_scale: 3.5
+MOSS-Image-SFT:
+  类型: moss-image
+  动漫: False
+  额外参数:
+    cfg_scale: 3.0
+    uncond_skip_layers: [22]
 Anima-Base-v1.0-Diffusers:
   类型: anima
   动漫: True

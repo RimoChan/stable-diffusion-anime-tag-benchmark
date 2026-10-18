@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from transformers import T5EncoderModel
 from diffusers.models import AutoencoderKL
-from diffusers import StableDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline, SanaPipeline, ZImagePipeline, Flux2KleinPipeline, AnimaAutoBlocks, Krea2Pipeline
+from diffusers import StableDiffusionPipeline, FluxTransformer2DModel, FluxPipeline, DPMSolverMultistepScheduler, StableDiffusionXLPipeline, EulerDiscreteScheduler, SD3Transformer2DModel, StableDiffusion3Pipeline, Lumina2Pipeline, SanaPipeline, ZImagePipeline, Flux2KleinPipeline, AnimaAutoBlocks, Krea2Pipeline, DiffusionPipeline
 from diffusers.guiders import ClassifierFreeGuidance
 from compel import Compel, ReturnedEmbeddingsType
 from safetensors import safe_open
@@ -176,6 +176,16 @@ def pipeline0(model_type, path, vae_path) -> 超StableDiffusionKDiffusionPipelin
         pipe = ZImagePipeline.from_pretrained(path, torch_dtype=torch.bfloat16)
         pipe.to("cuda")
         return pipe
+    elif model_type == 'moss-image':
+        pipe = DiffusionPipeline.from_pretrained(
+            path,
+            custom_pipeline="pipeline_moss_image",
+            trust_remote_code=True,
+            torch_dtype={"default": torch.bfloat16, "vae": torch.float32},
+        )
+        pipe.scheduler = type(pipe.scheduler).from_config(pipe.scheduler.config)
+        pipe.enable_model_cpu_offload()
+        return pipe
     elif model_type == 'flux2klein':
         pipe = Flux2KleinPipeline.from_pretrained(path, torch_dtype=torch.bfloat16)
         pipe.to("cuda")
@@ -303,7 +313,7 @@ def _txt2img(p: dict) -> list[bytes]:
     参数['negative_prompt'] = [参数['negative_prompt']] * batch_size
     seed = p.pop('seed')
 
-    for k in ['cfg_trunc_ratio', 'cfg_normalization']:
+    for k in ['cfg_trunc_ratio', 'cfg_normalization', 'uncond_skip_layers']:
         if k in p:
             参数[k] = p.pop(k)
 
@@ -311,7 +321,7 @@ def _txt2img(p: dict) -> list[bytes]:
 
     pipe = get_pipeline(model_type, override_settings['sd_model_checkpoint'], override_settings['sd_vae'], override_settings.get('lora'))
 
-    if model_type in ('flux.1s', 'flux.1d', 'sd3', 'sana', 'z-image', 'flux2klein', 'rum-flux2klein', 'krea2'):
+    if model_type in ('flux.1s', 'flux.1d', 'sd3', 'sana', 'z-image', 'flux2klein', 'rum-flux2klein', 'krea2', 'moss-image'):
         参数.pop('negative_prompt')
         参数.pop('use_karras_sigmas')
     if model_type == 'neta-lumina':
