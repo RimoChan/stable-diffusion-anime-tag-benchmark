@@ -340,6 +340,35 @@ def 导出角色():
         f.write(f'{df.T.to_markdown()}\n\n')
 
 
+def 导出画风():
+    全m = {}
+    for 文件 in [*Path('savedata').glob('画风_*_记录.json')]:
+        with open(文件, 'r', encoding='utf8') as f:
+            记录 = orjson.loads(f.read())
+        m = {}
+        model = 记录[0]['参数']['override_settings']['sd_model_checkpoint']
+        if model not in 模型池:
+            continue
+        for d in 记录:
+            分 = 0
+            for l in d['预测']:
+                for i, (预测画师, 概率) in enumerate(l):
+                    if 预测画师 == d['画师']:
+                        分 += ((len(l) - i) + 1) / (len(l) + 1)
+            print(d['预测'], d['画师'], 分)
+            m[d['画师']] = 分
+        全m[model] = m
+    df = pd.DataFrame(全m)
+    with open('测试结果/模型对不同画师的准确率.md', 'w', encoding='utf8') as f:
+        f.write(f'{df.T.to_markdown()}\n\n')
+
+    for model, m in 全m.items():
+        全m[model] = {'画师准确度': sum(m.values()) / len(m)}
+    df = pd.DataFrame(全m)
+    with open('测试结果/模型对画师的准确率.md', 'w', encoding='utf8') as f:
+        f.write(f'{df.T.to_markdown()}\n\n')
+
+
 def 导出lvis():
     d = {}
     for 文件 in tqdm([*Path('savedata').glob('lvis_*_记录.json')]):
@@ -385,5 +414,6 @@ if __name__ == '__main__':
     导出多标签(1280)
     导出角色()
     导出多人()
-    # 导出lvis()
+    导出画风()
+    导出lvis()
     subprocess.run(['python', 'R:/stable-diffusion-anime-tag-benchmark/html/转html.py'], check=True)

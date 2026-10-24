@@ -1,22 +1,30 @@
+import csv
+import sys
 import os
 import re
 import copy
 import json
 from pathlib import Path
+from functools import lru_cache
 from typing import Union, Optional, Iterable
 
 import cv2
+import torch
 import orjson
 import requests
 import numpy as np
 from PIL import Image
 import rimo_storage.cache
+from huggingface_hub import hf_hub_download
+from timm.models import create_model
+from timm.data import resolve_data_config
+from timm.data.transforms_factory import create_transform
 from transformers import AutoProcessor, AutoTokenizer, CLIPVisionModelWithProjection, CLIPTextModelWithProjection, pipeline
 
 import torch
 import diffusers
 
-assert torch.__version__ == '2.11.0+cu130'
+# assert torch.__version__ == '2.11.0+cu130'
 assert diffusers.__version__ == '0.40.0'
 
 
@@ -185,6 +193,40 @@ def yolo_world(图像名: str, 类名: Iterable) -> tuple:
     names = [yolo_world_model.names[i] for i in class_ids]
     return names, scores
 
+
+@lru_cache()
+def _Kaloscope_2_model():
+    sys.path.append('S:/lsnet-test')
+    from model import lsnet_artist
+
+    device = 'cuda'
+    checkpoint_path = hf_hub_download(repo_id='heathcliff01/Kaloscope2.0', filename='448-90.13/best_checkpoint.pth')
+    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+    state = checkpoint['model']
+    state = {k.removeprefix('module.'): v for k, v in state.items()}
+
+    num_classes, feature_dim = state["head.l.weight"].shape
+    model = create_model('lsnet_xl_artist_448', pretrained=False, num_classes=num_classes, feature_dim=feature_dim)
+    model.load_state_dict(state, strict=True)
+    model = model.to(device).eval()
+
+    data_config = resolve_data_config({"input_size": (3, 448, 448)}, model=model)
+    transform = create_transform(**data_config, is_training=False)
+
+    csv_path = hf_hub_download(repo_id='heathcliff01/Kaloscope2.0', filename='class_mapping.csv')
+    with open(csv_path, 'r', encoding='utf-8-sig') as f:
+        画师映射 = {int(row['class_id']): row['class_name'] for row in csv.DictReader(f)}
+    return model, 画师映射, transform
+
+
+def 识别画师(img: Image.Image, top_k: int = 5) -> list[tuple[str, float]]:
+    model, 画师映射, 预处理 = _Kaloscope_2_model()
+    input_tensor = 预处理(img.convert('RGB')).unsqueeze(0).to('cuda')
+    with torch.no_grad():
+        output = model(input_tensor)
+        probabilities = torch.softmax(output, dim=1)[0]
+    probs, indices = torch.topk(probabilities, top_k)
+    return [(画师映射.get(i, str(i)), float(p)) for p, i in zip(probs.tolist(), indices.tolist())]
 
 
 with open('./data/标签top1500.json', 'r') as f:
