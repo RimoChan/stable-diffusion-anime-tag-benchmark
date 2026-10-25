@@ -37,7 +37,7 @@ torch.load = _假load
 
 
 class 超StableDiffusionKDiffusionPipeline:
-    def __init__(self, path, vae_path=None, 串行化vae=True):
+    def __init__(self, path, vae_path=None):
         p = {}
         if vae_path:
             p['vae'] = AutoencoderKL.from_single_file(vae_path, torch_dtype=torch.float16, weights_only=False).to("cuda")
@@ -46,8 +46,6 @@ class 超StableDiffusionKDiffusionPipeline:
         c.pop('image_encoder')
         self._pipe = StableDiffusionKDiffusionPipeline(**c).to('cuda')
         self._pipe.set_scheduler('sample_dpmpp_2m')
-        if 串行化vae:
-            self._pipe.enable_vae_slicing()
         self._compel = Compel(tokenizer=self._pipe.tokenizer, text_encoder=self._pipe.text_encoder, truncate_long_prompts=False)
 
     def __call__(
@@ -67,7 +65,7 @@ class 超StableDiffusionKDiffusionPipeline:
 
 
 class 超StableDiffusionXLPipeline:
-    def __init__(self, path, vae_path=None, 串行化vae=True, 使用deepcache=False, 保存中间结果=False):
+    def __init__(self, path, vae_path=None, 使用deepcache=False, 保存中间结果=False):
         p = {}
         if vae_path:
             p['vae'] = AutoencoderKL.from_single_file(vae_path, torch_dtype=torch.float16, scaling_factor=0.13025).to("cuda")
@@ -82,8 +80,6 @@ class 超StableDiffusionXLPipeline:
         else:
             self._pipe.scheduler = DPMSolverMultistepScheduler.from_config(self._pipe.scheduler.config)
         self._pipe.set_progress_bar_config(disable=True)
-        if 串行化vae:
-            self._pipe.enable_vae_slicing()
         if 使用deepcache:
             helper = DeepCacheSDHelper(pipe=self._pipe)
             helper.set_params(cache_interval=2)
@@ -297,13 +293,18 @@ def _txt2img(p: dict) -> list[bytes]:
     assert 'batch_size' not in p and 'n_iter' not in p, 'batch_size和n_iter废弃了，传n'
     n = p.pop('n')
     if model_type in ('sdxl', 'sd'):
-        batch_size = 4
+        默认batch_size = 4
     elif model_type in ('rum-flux2klein',):
-        batch_size = 2
+        默认batch_size = 2
     else:
-        batch_size = 1
-    assert n % batch_size == 0
-    n_iter = n // batch_size
+        默认batch_size = 1
+    if n > 默认batch_size:
+        assert n % 默认batch_size == 0
+        n_iter = n // 默认batch_size
+        batch_size = 默认batch_size
+    else:
+        n_iter = 1
+        batch_size = n
 
     if model_type == 'neta-lumina':
         参数['prompt'] = 'You are an assistant designed to generate anime images based on textual prompts. <Prompt Start> ' + 参数['prompt']

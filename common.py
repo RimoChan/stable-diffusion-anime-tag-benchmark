@@ -1,9 +1,10 @@
-import csv
-import sys
 import os
 import re
+import csv
+import sys
 import copy
 import json
+import argparse
 from pathlib import Path
 from functools import lru_cache
 from typing import Union, Optional, Iterable
@@ -25,7 +26,7 @@ import torch
 import diffusers
 
 # assert torch.__version__ == '2.11.0+cu130'
-assert diffusers.__version__ == '0.40.0'
+assert diffusers.__version__ == '0.42.0'
 
 
 此处 = Path(__file__).parent
@@ -201,9 +202,9 @@ def _Kaloscope_2_model():
 
     device = 'cuda'
     checkpoint_path = hf_hub_download(repo_id='heathcliff01/Kaloscope2.0', filename='448-90.13/best_checkpoint.pth')
-    checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+    with torch.serialization.safe_globals([argparse.Namespace]):
+        checkpoint = torch.load(checkpoint_path, map_location='cpu', weights_only=False, mmap=True)
     state = checkpoint['model']
-    state = {k.removeprefix('module.'): v for k, v in state.items()}
 
     num_classes, feature_dim = state["head.l.weight"].shape
     model = create_model('lsnet_xl_artist_448', pretrained=False, num_classes=num_classes, feature_dim=feature_dim)

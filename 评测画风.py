@@ -63,9 +63,13 @@ def 评测模型(model, VAE, n_iter, *, use_tqdm=True, width=1024, height=1024, 
             },
             'model_type': model_type,
         }
+        skip = False
         for i in 记录:
             if 参数相同(i['参数'], 参数):
+                skip = True
                 break
+        if skip:
+            continue
         图s = txt2img({'n': 1} | 参数 | 覆盖参数, 缓存=图片缓存)
         md5 = hashlib.md5(prompt.encode()).hexdigest()
         for i, b in enumerate(图s):
@@ -86,10 +90,7 @@ def 评测模型(model, VAE, n_iter, *, use_tqdm=True, width=1024, height=1024, 
 
 
 if __name__ == '__main__':
-    白名单 = ['waiIllustriousSDXL_v160', 'noobaiXLNAIXL_epsilonPred11Version', 'novaAnimeXL_ilV160', 'chenkinNoobXLCKXL_v05', 'illustriousXL_v01', 'Illustrious-XL-v2.0', 'RUM-FLUX.2-klein-4B', 'Anima-Base-v1.0-Diffusers']
     for model in tqdm(模型池.values()):
         if model.类型 not in ('sdxl', 'rum-flux2klein', 'anima'):
-            continue
-        if model.名字 not in 白名单:
             continue
         评测模型(model.名字, model.vae, n_iter=450, 图片缓存=True, model_type=model.类型, 覆盖参数=model.额外参数 or {})

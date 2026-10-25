@@ -9,7 +9,7 @@ head:
 body style='margin: 0px;':
     div#app:
         header style='padding: 10px; border-bottom: 1px solid #777;':
-            a v-for='file of 所有文件' @click='设置当前文件(file)' style='margin-right: 15px;':
+            a v-for='file of 所有文件' :href="'?' + file" style='margin-right: 15px;':
                 {{ file.replace('.html', '') }}
             a href='https://github.com/RimoChan/stable-diffusion-anime-tag-benchmark' target='_blank' style='float: right;':
                 GitHub
